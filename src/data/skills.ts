@@ -1,0 +1,54 @@
+export interface Skill {
+  id: string;
+  name: string;
+  category: 'language' | 'framework' | 'tool' | 'concept' | 'soft';
+  icon: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  learningTime: string;
+  prerequisites: string[];
+  resources: string[];
+}
+
+export const skills: Skill[] = [
+  // Languages
+  { id: 'kotlin', name: 'Kotlin', category: 'language', icon: '🎯', description: 'Modern JVM language for Android development', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: ['java-basics'], resources: ['kotlinlang.org', 'Android Developers'] },
+  { id: 'swift', name: 'Swift', category: 'language', icon: '🐦', description: 'Apple\'s powerful, safe programming language', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: [], resources: ['swift.org', 'Apple Developer'] },
+  { id: 'dart', name: 'Dart', category: 'language', icon: '🎯', description: 'Google\'s optimized language for Flutter', difficulty: 'beginner', learningTime: '1-2 months', prerequisites: [], resources: ['dart.dev'] },
+  { id: 'python', name: 'Python', category: 'language', icon: '🐍', description: 'The language of AI, data science, and automation', difficulty: 'beginner', learningTime: '1-2 months', prerequisites: [], resources: ['python.org', 'Real Python'] },
+  { id: 'javascript', name: 'JavaScript', category: 'language', icon: '🟨', description: 'The language of the web', difficulty: 'beginner', learningTime: '1-2 months', prerequisites: [], resources: ['MDN Web Docs', 'javascript.info'] },
+  { id: 'typescript', name: 'TypeScript', category: 'language', icon: '🔷', description: 'JavaScript with static type safety', difficulty: 'intermediate', learningTime: '1 month', prerequisites: ['javascript'], resources: ['typescriptlang.org'] },
+  { id: 'csharp', name: 'C#', category: 'language', icon: '#️⃣', description: 'Microsoft\'s versatile object-oriented language', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: [], resources: ['docs.microsoft.com', 'Codecademy'] },
+  // Frameworks
+  { id: 'jetpack-compose', name: 'Jetpack Compose', category: 'framework', icon: '🎨', description: 'Modern Android UI toolkit', difficulty: 'intermediate', learningTime: '2 months', prerequisites: ['kotlin'], resources: ['developer.android.com'] },
+  { id: 'swiftui', name: 'SwiftUI', category: 'framework', icon: '🍃', description: 'Declarative UI framework for Apple platforms', difficulty: 'intermediate', learningTime: '2 months', prerequisites: ['swift'], resources: ['developer.apple.com'] },
+  { id: 'flutter', name: 'Flutter', category: 'framework', icon: '💙', description: 'Google\'s cross-platform UI toolkit', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: ['dart'], resources: ['flutter.dev'] },
+  { id: 'react', name: 'React', category: 'framework', icon: '⚛️', description: 'Facebook\'s declarative UI library', difficulty: 'intermediate', learningTime: '2 months', prerequisites: ['javascript', 'html-css'], resources: ['react.dev'] },
+  { id: 'react-native', name: 'React Native', category: 'framework', icon: '📱', description: 'Build native apps with React', difficulty: 'intermediate', learningTime: '2 months', prerequisites: ['react', 'javascript'], resources: ['reactnative.dev'] },
+  { id: 'nodejs', name: 'Node.js', category: 'framework', icon: '🟢', description: 'JavaScript runtime for backend development', difficulty: 'intermediate', learningTime: '2 months', prerequisites: ['javascript'], resources: ['nodejs.org'] },
+  { id: 'tensorflow', name: 'TensorFlow', category: 'framework', icon: '🔶', description: 'Google\'s open-source ML framework', difficulty: 'advanced', learningTime: '3-4 months', prerequisites: ['python', 'statistics', 'linear-algebra'], resources: ['tensorflow.org'] },
+  { id: 'pytorch', name: 'PyTorch', category: 'framework', icon: '🔥', description: 'Facebook\'s flexible ML research framework', difficulty: 'advanced', learningTime: '3-4 months', prerequisites: ['python', 'statistics', 'linear-algebra'], resources: ['pytorch.org'] },
+  { id: 'unity', name: 'Unity', category: 'framework', icon: '🎮', description: 'Cross-platform game engine', difficulty: 'advanced', learningTime: '4-6 months', prerequisites: ['csharp'], resources: ['unity.com', 'Unity Learn'] },
+  // Tools
+  { id: 'git', name: 'Git', category: 'tool', icon: '🔀', description: 'Version control system for tracking code changes', difficulty: 'beginner', learningTime: '2 weeks', prerequisites: [], resources: ['git-scm.com'] },
+  { id: 'docker', name: 'Docker', category: 'tool', icon: '🐳', description: 'Container platform for consistent deployments', difficulty: 'intermediate', learningTime: '1 month', prerequisites: ['linux-basics'], resources: ['docs.docker.com'] },
+  { id: 'figma', name: 'Figma', category: 'tool', icon: '🎯', description: 'Collaborative interface design tool', difficulty: 'beginner', learningTime: '1 month', prerequisites: [], resources: ['figma.com', 'Figma YouTube'] },
+  { id: 'xcode', name: 'Xcode', category: 'tool', icon: '🔨', description: 'Apple\'s IDE for iOS/macOS development', difficulty: 'beginner', learningTime: '2 weeks', prerequisites: [], resources: ['developer.apple.com'] },
+  // Concepts
+  { id: 'statistics', name: 'Statistics', category: 'concept', icon: '📐', description: 'Mathematical foundation for data analysis', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: [], resources: ['Khan Academy', 'StatQuest'] },
+  { id: 'linear-algebra', name: 'Linear Algebra', category: 'concept', icon: '🔢', description: 'Mathematical backbone of machine learning', difficulty: 'intermediate', learningTime: '2 months', prerequisites: [], resources: ['3Blue1Brown', 'MIT OpenCourseWare'] },
+  { id: 'networking', name: 'Networking', category: 'concept', icon: '🌐', description: 'TCP/IP, protocols, and network fundamentals', difficulty: 'intermediate', learningTime: '2-3 months', prerequisites: [], resources: ['CompTIA Network+'] },
+  { id: 'html-css', name: 'HTML & CSS', category: 'language', icon: '🌈', description: 'Structure and styling of web pages', difficulty: 'beginner', learningTime: '1 month', prerequisites: [], resources: ['MDN Web Docs', 'CSS-Tricks'] },
+  { id: 'sql', name: 'SQL', category: 'language', icon: '🗃️', description: 'Structured Query Language for databases', difficulty: 'beginner', learningTime: '1 month', prerequisites: [], resources: ['Mode Analytics', 'W3Schools'] },
+  { id: 'pandas', name: 'Pandas', category: 'framework', icon: '🐼', description: 'Python library for data manipulation and analysis', difficulty: 'intermediate', learningTime: '1 month', prerequisites: ['python'], resources: ['pandas.pydata.org'] },
+  { id: 'android-sdk', name: 'Android SDK', category: 'framework', icon: '🤖', description: 'Android Software Development Kit', difficulty: 'intermediate', learningTime: '1 month', prerequisites: ['kotlin'], resources: ['developer.android.com'] },
+  { id: 'game-math', name: 'Game Mathematics', category: 'concept', icon: '📐', description: 'Vectors, matrices, and physics for games', difficulty: 'intermediate', learningTime: '2 months', prerequisites: [], resources: ['gamemath.com', '3Blue1Brown'] },
+  { id: 'design-systems', name: 'Design Systems', category: 'concept', icon: '🧩', description: 'Component libraries and design token systems', difficulty: 'intermediate', learningTime: '1 month', prerequisites: ['figma'], resources: ['Figma', 'designsystems.com'] },
+  { id: 'ux-research', name: 'UX Research', category: 'concept', icon: '🔍', description: 'User interviews, usability testing, and synthesis', difficulty: 'intermediate', learningTime: '2 months', prerequisites: [], resources: ['NNGroup', 'UX Mastery'] },
+  { id: 'prototyping', name: 'Prototyping', category: 'concept', icon: '✏️', description: 'Creating interactive design prototypes', difficulty: 'beginner', learningTime: '1 month', prerequisites: ['figma'], resources: ['Figma', 'InVision'] },
+  { id: 'visualization', name: 'Data Visualization', category: 'concept', icon: '📊', description: 'Creating charts, graphs, and visual data stories', difficulty: 'intermediate', learningTime: '1-2 months', prerequisites: ['python', 'statistics'], resources: ['Matplotlib', 'Seaborn', 'Tableau'] },
+  { id: 'linux', name: 'Linux', category: 'tool', icon: '🐧', description: 'Linux operating system and command line', difficulty: 'intermediate', learningTime: '1-2 months', prerequisites: [], resources: ['Linux Journey', 'OverTheWire'] },
+  { id: 'web-security', name: 'Web Security', category: 'concept', icon: '🔒', description: 'OWASP Top 10, SQL injection, XSS, and more', difficulty: 'advanced', learningTime: '3 months', prerequisites: ['networking', 'linux'], resources: ['OWASP', 'HackTheBox'] },
+  { id: 'oscp', name: 'OSCP', category: 'concept', icon: '🏆', description: 'Offensive Security Certified Professional certification', difficulty: 'advanced', learningTime: '6 months', prerequisites: ['networking', 'linux', 'web-security'], resources: ['Offensive Security', 'HackTheBox', 'TryHackMe'] },
+  { id: 'firebase-basics', name: 'Firebase', category: 'tool', icon: '🔥', description: 'Google\'s mobile and web application platform', difficulty: 'beginner', learningTime: '2 weeks', prerequisites: [], resources: ['firebase.google.com'] },
+];

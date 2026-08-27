@@ -1,0 +1,133 @@
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowRight, Target } from 'lucide-react';
+import { CircularProgress, Progress } from '../components/ui/Progress';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { useCareer } from '../context/CareerContext';
+import { careers } from '../data/careers';
+
+const READINESS_FACTORS = [
+  { label: 'Skills Acquired', value: 35, icon: '⚡', description: 'Technical skills from your roadmap' },
+  { label: 'Projects Built', value: 30, icon: '🚀', description: 'Real-world projects in your portfolio' },
+  { label: 'Resources Completed', value: 15, icon: '📚', description: 'Courses, books, and docs consumed' },
+  { label: 'Consistency', value: 85, icon: '🔥', description: 'Your 12-day learning streak' },
+];
+
+const NEXT_ACTIONS = [
+  { label: 'Complete 2 more roadmap nodes', to: '/roadmap', impact: '+8%' },
+  { label: 'Finish the Weather App project', to: '/projects', impact: '+12%' },
+  { label: 'Complete 3 learning resources', to: '/resources', impact: '+6%' },
+  { label: 'Maintain your 15-day streak', to: '/progress', impact: '+4%' },
+];
+
+export default function CareerReadinessPage() {
+  const navigate = useNavigate();
+  const { user, selectedCareer } = useCareer();
+  const career = selectedCareer || careers[0];
+  const score = user.stats.careerReadinessScore;
+
+  const getReadinessLabel = (score: number) => {
+    if (score >= 80) return { label: 'Job Ready', color: 'text-success', emoji: '🎯' };
+    if (score >= 60) return { label: 'Almost There', color: 'text-info', emoji: '⚡' };
+    if (score >= 40) return { label: 'Making Progress', color: 'text-primary', emoji: '📈' };
+    return { label: 'Just Getting Started', color: 'text-accent', emoji: '🌱' };
+  };
+
+  const readiness = getReadinessLabel(score);
+
+  return (
+    <div className="min-h-screen bg-background pt-20 md:pt-28 pb-20">
+      <div className="max-w-3xl mx-auto px-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 border-b border-border pb-8">
+          <h1 className="font-display text-5xl md:text-6xl font-medium text-foreground tracking-tight mb-4">Career Readiness</h1>
+          <p className="text-xl text-muted-foreground font-light">
+            How ready are you to land a job as a <span className="text-foreground font-medium">{career.title}</span>?
+          </p>
+        </motion.div>
+
+        {/* Main score */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-16 flex flex-col md:flex-row items-center gap-12 md:gap-24"
+        >
+          <div className="flex-shrink-0">
+            <CircularProgress
+              value={score}
+              size={240}
+              strokeWidth={10}
+              label={`${score}%`}
+              sublabel="readiness"
+              color="#6366f1"
+            />
+          </div>
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3">Current Status</h2>
+            <p className={`font-display text-4xl md:text-5xl font-medium mb-4 ${readiness.color}`}>
+              {readiness.emoji} {readiness.label}
+            </p>
+            <p className="text-xl text-muted-foreground font-light leading-relaxed mb-8 max-w-xl">
+              You've made great progress! Keep completing roadmap nodes, projects, and resources to reach 100%.
+            </p>
+            <Button variant="primary" size="lg" rightIcon={<ArrowRight size={18} />} onClick={() => navigate('/roadmap')}>
+              Continue Learning
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Factor breakdown */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-16 pt-12 border-t border-border"
+        >
+          <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-8">Readiness Factors</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10">
+            {READINESS_FACTORS.map((factor) => (
+              <div key={factor.label} className="border-l border-border pl-6">
+                <div className="flex justify-between items-end mb-3">
+                  <span className="text-lg font-medium text-foreground flex items-center gap-3">
+                    <span className="text-2xl">{factor.icon}</span> {factor.label}
+                  </span>
+                  <span className="font-display text-2xl text-foreground">{factor.value}%</span>
+                </div>
+                <Progress value={factor.value} size="md" variant={factor.value > 70 ? 'green' : 'primary'} />
+                <p className="text-sm text-muted-foreground font-light mt-3">{factor.description}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Next actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="pt-12 border-t border-border"
+        >
+          <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-8 flex items-center gap-2">
+            <Target size={16} className="text-primary" /> Next Actions to Boost Readiness
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {NEXT_ACTIONS.map((action, i) => (
+              <button
+                key={i}
+                onClick={() => navigate(action.to)}
+                className="w-full flex items-center justify-between py-5 px-6 rounded-none border border-border hover:bg-surface-2 transition-all duration-300"
+              >
+                <div className="flex items-center gap-4">
+                  <ArrowRight size={16} className="text-primary flex-shrink-0" />
+                  <span className="text-base text-foreground font-medium text-left">{action.label}</span>
+                </div>
+                <Badge variant="green" className="text-xs px-2 py-1">{action.impact}</Badge>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

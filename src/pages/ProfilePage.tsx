@@ -6,7 +6,6 @@ import { Badge } from '../components/ui/Badge';
 import { Progress } from '../components/ui/Progress';
 import { useCareer } from '../context/CareerContext';
 import { careers } from '../data/careers';
-import { domains } from '../data/domains';
 
 const QUICK_LINKS = [
   { label: 'Career Sky', icon: <Compass size={16} />, to: '/sky', desc: 'Explore your universe' },
@@ -21,7 +20,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, selectedCareer, logout } = useCareer();
   const career = selectedCareer || careers[0];
-  const domain = domains.find(d => d.id === career?.domainId);
   const earnedAchievements = user.achievements.filter(a => a.isEarned);
 
   const handleLogout = () => {
@@ -95,7 +93,7 @@ export default function ProfilePage() {
           >
             <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-6 flex items-center justify-between">
               Readiness Score
-              <Button variant="link" size="xs" onClick={() => navigate('/readiness')} className="text-primary hover:text-primary/80 px-0 h-auto">
+              <Button variant="ghost" size="xs" onClick={() => navigate('/readiness')} className="text-primary hover:text-primary/80 px-0 h-auto">
                 Full Report →
               </Button>
             </h2>
@@ -139,7 +137,7 @@ export default function ProfilePage() {
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Recent Achievements</h2>
-                <Button variant="link" size="xs" onClick={() => navigate('/achievements')} className="px-0 h-auto text-primary">
+                <Button variant="ghost" size="xs" onClick={() => navigate('/achievements')} className="px-0 h-auto text-primary">
                   View All →
                 </Button>
               </div>

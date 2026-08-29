@@ -156,7 +156,7 @@ export default function OnboardingPage() {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
               className="editorial-surface rounded-3xl p-8 lg:p-12"
             >
               <CurrentStep />

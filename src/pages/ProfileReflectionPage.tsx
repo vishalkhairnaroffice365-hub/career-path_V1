@@ -4,7 +4,6 @@ import { ArrowRight, Edit2 } from 'lucide-react';
 import { useOnboarding } from '../context/OnboardingContext';
 import { useCareer } from '../context/CareerContext';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { careers } from '../data/careers';
 import { domains } from '../data/domains';
 import { Button } from '../components/ui/Button';

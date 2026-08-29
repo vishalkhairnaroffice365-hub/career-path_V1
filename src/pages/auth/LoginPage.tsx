@@ -6,10 +6,11 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useCareer } from '../../context/CareerContext';
 import { useUI } from '../../context/UIContext';
+import { authApi } from '../../services/auth.api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
 export default function LoginPage() {
@@ -32,13 +33,17 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    // Simulate auth delay
-    await new Promise((r) => setTimeout(r, 1200));
-
-    // Mock login — any email/password works
-    login({ name: email.split('@')[0], email });
-    addToast({ type: 'success', message: "Welcome back! Let's explore your possibilities." });
-    navigate('/sky');
+    try {
+      const res = await authApi.login(email, password);
+      localStorage.setItem('career_path_token', res.token);
+      login(res.user);
+      addToast({ type: 'success', message: "Welcome back! Let's explore your possibilities." });
+      navigate(res.user.onboardingCompleted ? '/sky' : '/onboarding');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, TrendingUp, DollarSign, Clock, Globe, Star, CheckCircle, XCircle, Plus, ChevronRight
+  ArrowLeft, TrendingUp, DollarSign, Clock, Globe, Plus, ChevronRight
 } from 'lucide-react';
 import { careers } from '../data/careers';
 import { domains } from '../data/domains';
 import { Button } from '../components/ui/Button';
-import { Badge, DemandBadge, WorkStyleBadge } from '../components/ui/Badge';
+import { DemandBadge, WorkStyleBadge } from '../components/ui/Badge';
 import { Progress } from '../components/ui/Progress';
 import { useCareer } from '../context/CareerContext';
 import { useUI } from '../context/UIContext';
@@ -224,7 +224,7 @@ export default function CareerDetailsPage() {
                     <span className="text-foreground font-medium">{skill}</span>
                     <span className="text-muted-foreground uppercase text-xs tracking-wider font-semibold">{['Critical', 'Important', 'Helpful'][i % 3]}</span>
                   </div>
-                  <Progress value={100 - i * 8} variant={i === 0 ? 'primary' : 'default'} size="sm" />
+                  <Progress value={100 - i * 8} variant="primary" size="sm" />
                 </div>
               ))}
             </div>

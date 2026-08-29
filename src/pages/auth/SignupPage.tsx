@@ -5,13 +5,14 @@ import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useCareer } from '../../context/CareerContext';
+import { authApi } from '../../services/auth.api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const },
   }),
 };
 
@@ -40,11 +41,16 @@ export default function SignupPage() {
     }
 
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-
-    // Store user and navigate to onboarding
-    login({ name, email });
-    navigate('/onboarding');
+    try {
+      const res = await authApi.register(name, email, password);
+      localStorage.setItem('career_path_token', res.token);
+      login(res.user);
+      navigate('/onboarding');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

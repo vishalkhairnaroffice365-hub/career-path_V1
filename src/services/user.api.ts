@@ -1,14 +1,14 @@
 import { api } from './api';
-import type { UserProfile, OnboardingData, UserProgress } from '../data/user';
+import type { UserProfile, OnboardingData } from '../data/user';
 
 export const userApi = {
   async getProfile(): Promise<UserProfile> {
-    const res = await api.get<{ success: boolean; data: UserProfile }>('/users/me');
+    const res = await api.get<{ success: boolean; data: UserProfile }>('/users/profile');
     return res.data.data;
   },
 
-  async updateProfile(data: Partial<UserProfile>): Promise<UserProfile> {
-    const res = await api.put<{ success: boolean; data: UserProfile }>('/users/me', data);
+  async updateProfile(updates: { name?: string; avatar?: string }): Promise<UserProfile> {
+    const res = await api.put<{ success: boolean; data: UserProfile }>('/users/profile', updates);
     return res.data.data;
   },
 
@@ -17,19 +17,8 @@ export const userApi = {
     return res.data.data;
   },
 
-  async completeOnboarding(profileData?: Partial<UserProfile>): Promise<UserProfile> {
-    const res = await api.post<{ success: boolean; data: UserProfile }>(
-      '/users/onboarding/complete',
-      profileData || {}
-    );
-    return res.data.data;
-  },
-
-  async getProgress(): Promise<{ progress: UserProgress; stats: any; achievements: any[] }> {
-    const res = await api.get<{
-      success: boolean;
-      data: { progress: UserProgress; stats: any; achievements: any[] };
-    }>('/users/progress');
+  async completeOnboarding(): Promise<UserProfile> {
+    const res = await api.post<{ success: boolean; data: UserProfile }>('/users/onboarding/complete');
     return res.data.data;
   },
 };

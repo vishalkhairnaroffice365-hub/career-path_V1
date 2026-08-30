@@ -24,46 +24,6 @@ export interface IOnboardingData {
   motivations?: string[];
 }
 
-export interface ILessonProgress {
-  lessonId: string;
-  completed: boolean;
-}
-
-export interface IUserCourseProgress {
-  nodeId: string;
-  lessonsCompleted: string[];
-  totalLessons: number;
-  completed: boolean;
-  startedAt?: Date | null;
-  completedAt?: Date | null;
-}
-
-export interface IUserAssessmentScore {
-  nodeId: string;
-  score: number;
-  passed: boolean;
-  attempts: number;
-  lastAttemptAt?: Date | null;
-}
-
-export interface IUserTaskSubmission {
-  nodeId: string;
-  githubUrl?: string;
-  liveUrl?: string;
-  submittedAt?: Date | null;
-  status: 'not-started' | 'in-progress' | 'submitted' | 'under-review' | 'passed' | 'failed';
-  taskStartTime?: number | null;
-  taskDeadline?: number | null;
-}
-
-export interface IUserLearningState {
-  roadmapStarted: boolean;
-  courseProgress: Record<string, IUserCourseProgress>;
-  assessmentScores: Record<string, IUserAssessmentScore>;
-  codingScores: Record<string, number>;
-  taskSubmissions: Record<string, IUserTaskSubmission>;
-}
-
 export interface IUserProgress {
   completedNodeIds: string[];
   inProgressNodeIds: string[];
@@ -96,6 +56,13 @@ export interface IUserAchievement {
   category: 'milestone' | 'skill' | 'streak' | 'social' | 'special';
 }
 
+export interface IUserLearning {
+  courseProgress?: Record<string, { completedLessons: string[]; isCompleted: boolean }>;
+  assessmentScores?: Record<string, number>;
+  codingScores?: Record<string, number>;
+  taskSubmissions?: Record<string, { status: string; githubUrl?: string; liveUrl?: string; submittedAt?: Date }>;
+}
+
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
@@ -107,7 +74,7 @@ export interface IUser extends Document {
   onboardingCompleted: boolean;
   onboardingData?: IOnboardingData;
   progress: IUserProgress;
-  learning: IUserLearningState;
+  learning?: IUserLearning;
   stats: IUserStats;
   achievements: IUserAchievement[];
   comparedCareerIds: string[];
@@ -189,17 +156,6 @@ const UserAchievementSchema = new Schema<IUserAchievement>(
   { _id: false }
 );
 
-const UserLearningSchema = new Schema<IUserLearningState>(
-  {
-    roadmapStarted: { type: Boolean, default: false },
-    courseProgress: { type: Schema.Types.Mixed, default: () => ({}) },
-    assessmentScores: { type: Schema.Types.Mixed, default: () => ({}) },
-    codingScores: { type: Schema.Types.Mixed, default: () => ({}) },
-    taskSubmissions: { type: Schema.Types.Mixed, default: () => ({}) },
-  },
-  { _id: false }
-);
-
 const UserSchema = new Schema<IUser>(
   {
     email: {
@@ -258,14 +214,10 @@ const UserSchema = new Schema<IUser>(
       }),
     },
     learning: {
-      type: UserLearningSchema,
-      default: () => ({
-        roadmapStarted: false,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      }),
+      courseProgress: { type: Schema.Types.Mixed, default: {} },
+      assessmentScores: { type: Schema.Types.Mixed, default: {} },
+      codingScores: { type: Schema.Types.Mixed, default: {} },
+      taskSubmissions: { type: Schema.Types.Mixed, default: {} },
     },
     stats: {
       type: UserStatsSchema,

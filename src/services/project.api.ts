@@ -10,12 +10,14 @@ export const projectApi = {
 
   async updateStatus(
     projectId: string,
-    data: { status: ProjectStatus; githubUrl?: string; liveUrl?: string }
+    status: ProjectStatus,
+    githubUrl?: string,
+    liveUrl?: string
   ): Promise<{ project: Project; user: UserProfile; unlockedAchievements: string[] }> {
     const res = await api.post<{
       success: boolean;
       data: { project: Project; user: UserProfile; unlockedAchievements: string[] };
-    }>(`/projects/${projectId}/status`, data);
+    }>(`/projects/${projectId}/status`, { status, githubUrl, liveUrl });
     return res.data.data;
   },
 };

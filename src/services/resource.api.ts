@@ -1,11 +1,11 @@
 import { api } from './api';
-import type { Resource, ResourceType } from '../data/resources';
+import type { Resource, ResourceType, ResourceLevel } from '../data/resources';
 import type { UserProfile } from '../data/user';
 
 export const resourceApi = {
   async getResources(params?: {
     type?: ResourceType | 'all';
-    level?: string;
+    level?: ResourceLevel;
     isFree?: boolean;
     careerId?: string;
     skillId?: string;
@@ -14,9 +14,7 @@ export const resourceApi = {
     return res.data.data;
   },
 
-  async completeResource(
-    resourceId: string
-  ): Promise<{ resource: Resource; user: UserProfile; unlockedAchievements: string[] }> {
+  async completeResource(resourceId: string): Promise<{ resource: Resource; user: UserProfile; unlockedAchievements: string[] }> {
     const res = await api.post<{
       success: boolean;
       data: { resource: Resource; user: UserProfile; unlockedAchievements: string[] };

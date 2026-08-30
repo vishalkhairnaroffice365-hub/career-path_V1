@@ -1,9 +1,26 @@
 import { User, type IUser } from '../models/User.model.js';
-import { Course } from '../models/Course.model.js';
 import { ScoringService } from './scoring.service.js';
 import { ApiError } from '../utils/apiError.js';
 
 export class ProgressService {
+  /**
+   * Ensures learning sub-document initialized
+   */
+  private static ensureLearning(user: IUser): void {
+    if (!user.learning) {
+      user.learning = {
+        courseProgress: {},
+        assessmentScores: {},
+        codingScores: {},
+        taskSubmissions: {},
+      };
+    }
+    if (!user.learning.courseProgress) user.learning.courseProgress = {};
+    if (!user.learning.assessmentScores) user.learning.assessmentScores = {};
+    if (!user.learning.codingScores) user.learning.codingScores = {};
+    if (!user.learning.taskSubmissions) user.learning.taskSubmissions = {};
+  }
+
   /**
    * Updates user streak based on last active timestamp.
    */
@@ -68,39 +85,14 @@ export class ProgressService {
   }
 
   /**
-   * Starts user's active roadmap.
-   */
-  static async startRoadmap(user: IUser): Promise<{ user: IUser; unlockedAchievements: string[] }> {
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    } else {
-      user.learning.roadmapStarted = true;
-    }
-    user.markModified('learning');
-
-    this.updateStreak(user);
-    const unlockedAchievements = this.checkAchievements(user);
-    await user.save();
-    return { user, unlockedAchievements };
-  }
-
-  /**
    * Marks a roadmap node as completed.
    */
-  static async completeRoadmapNode(
-    user: IUser,
-    nodeId: string
-  ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
+  static async completeRoadmapNode(user: IUser, nodeId: string): Promise<{ user: IUser; unlockedAchievements: string[] }> {
     if (!user.progress.completedNodeIds.includes(nodeId)) {
       user.progress.completedNodeIds.push(nodeId);
     }
 
+    // Remove from in-progress if present
     user.progress.inProgressNodeIds = user.progress.inProgressNodeIds.filter((id) => id !== nodeId);
 
     // Update stats
@@ -109,119 +101,21 @@ export class ProgressService {
     user.progress.hoursThisWeek = Math.min(user.progress.hoursThisWeek + 4, 40);
 
     this.updateStreak(user);
+
+    // Recalculate readiness
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
+
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('progress');
+    user.markModified('stats');
+    user.markModified('achievements');
     await user.save();
     return { user, unlockedAchievements };
   }
 
   /**
-   * Updates lesson-level progress for a course node.
-   */
-  static async updateLessonProgress(
-    user: IUser,
-    nodeId: string,
-    lessonId: string,
-    completed: boolean
-  ): Promise<{ user: IUser; courseProgress: any; unlockedAchievements: string[] }> {
-    const course = await Course.findOne({ nodeId });
-    const allLessons = course ? course.modules.flatMap((m) => m.lessons) : [];
-    const totalLessons = allLessons.length || 6;
-
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
-
-    const currentProgress = user.learning.courseProgress[nodeId] || {
-      nodeId,
-      lessonsCompleted: [],
-      totalLessons,
-      completed: false,
-      startedAt: new Date(),
-    };
-
-    if (completed) {
-      if (!currentProgress.lessonsCompleted.includes(lessonId)) {
-        currentProgress.lessonsCompleted.push(lessonId);
-        user.stats.totalHoursLearned += 1;
-      }
-    } else {
-      currentProgress.lessonsCompleted = currentProgress.lessonsCompleted.filter((id) => id !== lessonId);
-    }
-
-    currentProgress.completed = currentProgress.lessonsCompleted.length >= totalLessons;
-    if (currentProgress.completed && !currentProgress.completedAt) {
-      currentProgress.completedAt = new Date();
-      if (!user.progress.completedNodeIds.includes(nodeId)) {
-        user.progress.completedNodeIds.push(nodeId);
-      }
-    }
-
-    user.learning.courseProgress[nodeId] = currentProgress;
-    user.markModified('learning');
-
-    this.updateStreak(user);
-    user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
-    const unlockedAchievements = this.checkAchievements(user);
-
-    await user.save();
-    return { user, courseProgress: currentProgress, unlockedAchievements };
-  }
-
-  /**
-   * Marks full course complete.
-   */
-  static async completeCourse(
-    user: IUser,
-    nodeId: string
-  ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
-    const course = await Course.findOne({ nodeId });
-    const allLessons = course ? course.modules.flatMap((m) => m.lessons) : [];
-    const lessonIds = allLessons.map((l) => l.id);
-
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
-
-    user.learning.courseProgress[nodeId] = {
-      nodeId,
-      lessonsCompleted: lessonIds,
-      totalLessons: lessonIds.length,
-      completed: true,
-      startedAt: user.learning.courseProgress[nodeId]?.startedAt || new Date(),
-      completedAt: new Date(),
-    };
-    user.markModified('learning');
-
-    if (!user.progress.completedNodeIds.includes(nodeId)) {
-      user.progress.completedNodeIds.push(nodeId);
-      user.stats.skillsAcquired += 1;
-      user.stats.totalHoursLearned += 3;
-    }
-
-    this.updateStreak(user);
-    user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
-    const unlockedAchievements = this.checkAchievements(user);
-
-    await user.save();
-    return { user, unlockedAchievements };
-  }
-
-  /**
-   * Records MCQ assessment submission & score.
+   * Records assessment score for a node
    */
   static async recordAssessmentScore(
     user: IUser,
@@ -229,109 +123,116 @@ export class ProgressService {
     score: number,
     passed: boolean
   ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
+    this.ensureLearning(user);
+    user.learning!.assessmentScores![nodeId] = score;
 
-    const prev = user.learning.assessmentScores[nodeId];
-    user.learning.assessmentScores[nodeId] = {
-      nodeId,
-      score,
-      passed,
-      attempts: (prev?.attempts || 0) + 1,
-      lastAttemptAt: new Date(),
-    };
-    user.markModified('learning');
-
+    this.updateStreak(user);
     if (passed) {
       user.stats.totalHoursLearned += 2;
     }
 
-    this.updateStreak(user);
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('learning');
+    user.markModified('stats');
     await user.save();
     return { user, unlockedAchievements };
   }
 
   /**
-   * Records coding challenge completion & score.
+   * Records coding challenge score for a node
    */
   static async recordCodingScore(
     user: IUser,
     nodeId: string,
     score: number
   ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
-
-    user.learning.codingScores[nodeId] = score;
-    user.markModified('learning');
-
-    if (score >= 70) {
-      user.stats.totalHoursLearned += 3;
-    }
+    this.ensureLearning(user);
+    user.learning!.codingScores![nodeId] = score;
 
     this.updateStreak(user);
+    user.stats.totalHoursLearned += 2;
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('learning');
+    user.markModified('stats');
     await user.save();
     return { user, unlockedAchievements };
   }
 
   /**
-   * Starts a practical task and sets deadline timestamp.
+   * Updates lesson completion within a course
+   */
+  static async updateLessonProgress(
+    user: IUser,
+    nodeId: string,
+    lessonId: string,
+    completed: boolean
+  ): Promise<{ user: IUser; courseProgress: any; unlockedAchievements: string[] }> {
+    this.ensureLearning(user);
+    if (!user.learning!.courseProgress![nodeId]) {
+      user.learning!.courseProgress![nodeId] = { completedLessons: [], isCompleted: false };
+    }
+
+    const currentLessons = user.learning!.courseProgress![nodeId].completedLessons || [];
+    if (completed && !currentLessons.includes(lessonId)) {
+      currentLessons.push(lessonId);
+    } else if (!completed) {
+      const idx = currentLessons.indexOf(lessonId);
+      if (idx > -1) currentLessons.splice(idx, 1);
+    }
+
+    user.learning!.courseProgress![nodeId].completedLessons = currentLessons;
+    this.updateStreak(user);
+    const unlockedAchievements = this.checkAchievements(user);
+
+    user.markModified('learning');
+    await user.save();
+    return { user, courseProgress: user.learning!.courseProgress![nodeId], unlockedAchievements };
+  }
+
+  /**
+   * Completes an entire course module
+   */
+  static async completeCourse(
+    user: IUser,
+    nodeId: string
+  ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
+    this.ensureLearning(user);
+    if (!user.learning!.courseProgress![nodeId]) {
+      user.learning!.courseProgress![nodeId] = { completedLessons: [], isCompleted: true };
+    } else {
+      user.learning!.courseProgress![nodeId].isCompleted = true;
+    }
+
+    return this.completeRoadmapNode(user, nodeId);
+  }
+
+  /**
+   * Starts a practical task
    */
   static async startTask(
     user: IUser,
     nodeId: string,
-    durationHours: number
+    _durationHours?: number
   ): Promise<{ user: IUser; taskSubmission: any }> {
-    const startTime = Date.now();
-    const deadline = startTime + durationHours * 3600 * 1000;
-
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
-
-    const submission = {
-      nodeId,
-      status: 'in-progress' as const,
-      taskStartTime: startTime,
-      taskDeadline: deadline,
+    this.ensureLearning(user);
+    const taskSubmission = {
+      status: 'in-progress',
+      startedAt: new Date(),
     };
-
-    user.learning.taskSubmissions[nodeId] = submission;
-    user.markModified('learning');
-
+    user.learning!.taskSubmissions![nodeId] = taskSubmission;
     this.updateStreak(user);
+
+    user.markModified('learning');
     await user.save();
-    return { user, taskSubmission: submission };
+    return { user, taskSubmission };
   }
 
   /**
-   * Submits a practical task milestone with GitHub and live URLs.
+   * Submits a milestone project task
    */
   static async submitTask(
     user: IUser,
@@ -339,41 +240,24 @@ export class ProgressService {
     githubUrl: string,
     liveUrl?: string
   ): Promise<{ user: IUser; taskSubmission: any; unlockedAchievements: string[] }> {
-    if (!user.learning) {
-      user.learning = {
-        roadmapStarted: true,
-        courseProgress: {},
-        assessmentScores: {},
-        codingScores: {},
-        taskSubmissions: {},
-      };
-    }
-
-    const prev = user.learning.taskSubmissions[nodeId] || {};
-    const submission = {
-      ...prev,
-      nodeId,
-      status: 'submitted' as const,
+    this.ensureLearning(user);
+    const taskSubmission = {
+      status: 'submitted',
       githubUrl,
-      liveUrl,
+      liveUrl: liveUrl || '',
       submittedAt: new Date(),
     };
+    user.learning!.taskSubmissions![nodeId] = taskSubmission;
 
-    user.learning.taskSubmissions[nodeId] = submission;
-    user.markModified('learning');
-
-    if (!user.progress.completedProjectIds.includes(nodeId)) {
-      user.progress.completedProjectIds.push(nodeId);
-      user.stats.projectsCompleted += 1;
-      user.stats.totalHoursLearned += 12;
-    }
-
+    user.stats.totalHoursLearned += 5;
     this.updateStreak(user);
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('learning');
+    user.markModified('stats');
     await user.save();
-    return { user, taskSubmission: submission, unlockedAchievements };
+    return { user, taskSubmission, unlockedAchievements };
   }
 
   /**
@@ -399,6 +283,8 @@ export class ProgressService {
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('progress');
+    user.markModified('stats');
     await user.save();
     return { user, unlockedAchievements };
   }
@@ -406,10 +292,7 @@ export class ProgressService {
   /**
    * Marks a resource as completed.
    */
-  static async completeResource(
-    user: IUser,
-    resourceId: string
-  ): Promise<{ user: IUser; unlockedAchievements: string[] }> {
+  static async completeResource(user: IUser, resourceId: string): Promise<{ user: IUser; unlockedAchievements: string[] }> {
     if (!user.progress.completedResourceIds.includes(resourceId)) {
       user.progress.completedResourceIds.push(resourceId);
       user.stats.resourcesConsumed += 1;
@@ -420,6 +303,8 @@ export class ProgressService {
     user.stats.careerReadinessScore = await ScoringService.calculateCareerReadinessScore(user);
     const unlockedAchievements = this.checkAchievements(user);
 
+    user.markModified('progress');
+    user.markModified('stats');
     await user.save();
     return { user, unlockedAchievements };
   }

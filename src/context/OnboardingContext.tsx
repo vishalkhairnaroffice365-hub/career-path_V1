@@ -1,5 +1,6 @@
-import { createContext, useContext, useReducer, type ReactNode  } from 'react';
+import { createContext, useContext, useReducer, type ReactNode } from 'react';
 import type { OnboardingData } from '../data/user';
+import { userApi } from '../services/user.api';
 
 export type OnboardingStep =
   | 'about-you'
@@ -33,6 +34,7 @@ type OnboardingAction =
   | { type: 'PREV_STEP' }
   | { type: 'GO_TO_STEP'; payload: number }
   | { type: 'UPDATE_DATA'; payload: Partial<OnboardingData> }
+  | { type: 'SET_DATA'; payload: Partial<OnboardingData> }
   | { type: 'COMPLETE' }
   | { type: 'RESET' };
 
@@ -65,6 +67,11 @@ function onboardingReducer(state: OnboardingState, action: OnboardingAction): On
       return {
         ...state,
         data: { ...state.data, ...action.payload },
+      };
+    case 'SET_DATA':
+      return {
+        ...state,
+        data: action.payload,
       };
     case 'COMPLETE':
       return {
@@ -99,7 +106,24 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(onboardingReducer, initialState);
 
   const currentStep = state.steps[state.currentStep];
-  const progress = Math.round(((state.currentStep) / (state.totalSteps - 1)) * 100);
+  const progress = Math.round((state.currentStep / (state.totalSteps - 1)) * 100);
+
+  const handleUpdateData = (data: Partial<OnboardingData>) => {
+    dispatch({ type: 'UPDATE_DATA', payload: data });
+    // Sync to backend if token exists
+    const token = localStorage.getItem('career_path_token');
+    if (token) {
+      userApi.saveOnboarding(data).catch(() => {});
+    }
+  };
+
+  const handleComplete = () => {
+    dispatch({ type: 'COMPLETE' });
+    const token = localStorage.getItem('career_path_token');
+    if (token) {
+      userApi.completeOnboarding().catch(() => {});
+    }
+  };
 
   const value: OnboardingContextValue = {
     state,
@@ -111,16 +135,12 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     nextStep: () => dispatch({ type: 'NEXT_STEP' }),
     prevStep: () => dispatch({ type: 'PREV_STEP' }),
     goToStep: (index) => dispatch({ type: 'GO_TO_STEP', payload: index }),
-    updateData: (data) => dispatch({ type: 'UPDATE_DATA', payload: data }),
-    complete: () => dispatch({ type: 'COMPLETE' }),
+    updateData: handleUpdateData,
+    complete: handleComplete,
     reset: () => dispatch({ type: 'RESET' }),
   };
 
-  return (
-    <OnboardingContext.Provider value={value}>
-      {children}
-    </OnboardingContext.Provider>
-  );
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
 export function useOnboarding(): OnboardingContextValue {

@@ -10,9 +10,7 @@ export class ApiError extends Error {
     this.errors = errors;
 
     Object.setPrototypeOf(this, new.target.prototype);
-    if (typeof (Error as any).captureStackTrace === 'function') {
-      (Error as any).captureStackTrace(this, this.constructor);
-    }
+    Error.captureStackTrace(this, this.constructor);
   }
 
   static badRequest(message: string, errors?: any[]): ApiError {

@@ -7,25 +7,11 @@ import { ProgressService } from '../services/progress.service.js';
 export class ProjectController {
   static async getProjects(req: Request, res: Response, next: NextFunction) {
     try {
-      const { careerId, difficulty, search } = req.query;
+      const { careerId, difficulty } = req.query;
       const query: Record<string, any> = {};
 
-      if (careerId && careerId !== 'all') query.careerIds = careerId;
-      if (difficulty && difficulty !== 'all') query.difficulty = difficulty;
-
-      if (search && typeof search === 'string' && search.trim()) {
-        const s = search.trim();
-        const searchRegex = new RegExp(s, 'i');
-        query.$or = [
-          { title: searchRegex },
-          { description: searchRegex },
-          { longDescription: searchRegex },
-          { techStack: searchRegex },
-          { tags: searchRegex },
-          { skillIds: searchRegex },
-          { careerIds: searchRegex },
-        ];
-      }
+      if (careerId) query.careerIds = careerId;
+      if (difficulty) query.difficulty = difficulty;
 
       const projects = await Project.find(query).sort({ phase: 1 });
       const user = req.user;
@@ -33,7 +19,7 @@ export class ProjectController {
       const enhanced = projects.map((project) => {
         const json: any = project.toJSON();
         if (user) {
-          const isCompleted = user.progress?.completedProjectIds?.includes(project.id);
+          const isCompleted = user.progress.completedProjectIds.includes(project.id);
           json.status = isCompleted ? 'completed' : project.status;
         }
         return json;

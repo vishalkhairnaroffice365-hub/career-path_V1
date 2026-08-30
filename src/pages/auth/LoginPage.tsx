@@ -6,7 +6,6 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useCareer } from '../../context/CareerContext';
 import { useUI } from '../../context/UIContext';
-
 import { authApi } from '../../services/auth.api';
 
 const fadeUp = {
@@ -35,10 +34,11 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const res = await authApi.login({ email, password });
+      const res = await authApi.login(email, password);
+      localStorage.setItem('career_path_token', res.token);
       login(res.user);
       addToast({ type: 'success', message: "Welcome back! Let's explore your possibilities." });
-      navigate('/sky');
+      navigate(res.user.onboardingCompleted ? '/sky' : '/onboarding');
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {

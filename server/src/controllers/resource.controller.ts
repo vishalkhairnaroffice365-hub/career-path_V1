@@ -7,29 +7,14 @@ import { ProgressService } from '../services/progress.service.js';
 export class ResourceController {
   static async getResources(req: Request, res: Response, next: NextFunction) {
     try {
-      const { type, level, isFree, careerId, skillId, search } = req.query;
+      const { type, level, isFree, careerId, skillId } = req.query;
       const query: Record<string, any> = {};
 
       if (type && type !== 'all') query.type = type;
-      if (level && level !== 'all') query.level = level;
-      if (isFree !== undefined && isFree !== 'all') query.isFree = isFree === 'true';
-      if (careerId && careerId !== 'all') query.careerIds = careerId;
-      if (skillId && skillId !== 'all') query.skillIds = skillId;
-
-      if (search && typeof search === 'string' && search.trim()) {
-        const s = search.trim();
-        const searchRegex = new RegExp(s, 'i');
-        query.$or = [
-          { title: searchRegex },
-          { description: searchRegex },
-          { provider: searchRegex },
-          { type: searchRegex },
-          { level: searchRegex },
-          { skillIds: searchRegex },
-          { careerIds: searchRegex },
-          { tags: searchRegex },
-        ];
-      }
+      if (level) query.level = level;
+      if (isFree !== undefined) query.isFree = isFree === 'true';
+      if (careerId) query.careerIds = careerId;
+      if (skillId) query.skillIds = skillId;
 
       const resources = await Resource.find(query).sort({ rating: -1 });
       const user = req.user;
@@ -37,7 +22,7 @@ export class ResourceController {
       const enhanced = resources.map((resource) => {
         const json: any = resource.toJSON();
         if (user) {
-          json.isCompleted = user.progress?.completedResourceIds?.includes(resource.id) || false;
+          json.isCompleted = user.progress.completedResourceIds.includes(resource.id);
         }
         return json;
       });

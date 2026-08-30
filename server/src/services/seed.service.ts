@@ -5,26 +5,16 @@ import { Skill } from '../models/Skill.model.js';
 import { Project } from '../models/Project.model.js';
 import { Resource } from '../models/Resource.model.js';
 import { Achievement } from '../models/Achievement.model.js';
-import { Course } from '../models/Course.model.js';
-import { Assessment } from '../models/Assessment.model.js';
-import { CodingChallenge } from '../models/CodingChallenge.model.js';
-import { PracticalTask } from '../models/Task.model.js';
-import { News } from '../models/News.model.js';
 import { SYSTEM_ACHIEVEMENTS } from '../constants/achievements.js';
 import { logger } from '../config/logger.js';
 
-// Raw seed data
+// Raw seed data extracted directly from src/data/*
 import { rawDomains } from './seedData/domains.data.js';
 import { rawCareers } from './seedData/careers.data.js';
 import { rawRoadmaps } from './seedData/roadmaps.data.js';
 import { rawSkills } from './seedData/skills.data.js';
 import { rawProjects } from './seedData/projects.data.js';
 import { rawResources } from './seedData/resources.data.js';
-import { rawAllCourses } from './seedData/allCourses.data.js';
-import { rawAllAssessments } from './seedData/allAssessments.data.js';
-import { rawAllChallenges } from './seedData/allChallenges.data.js';
-import { rawAllTasks } from './seedData/allTasks.data.js';
-import { rawNews } from './seedData/news.data.js';
 
 export async function seedDatabase(): Promise<{
   domainsCount: number;
@@ -34,14 +24,8 @@ export async function seedDatabase(): Promise<{
   projectsCount: number;
   resourcesCount: number;
   achievementsCount: number;
-  coursesCount: number;
-  assessmentsCount: number;
-  totalQuestionsCount: number;
-  codingChallengesCount: number;
-  tasksCount: number;
-  newsCount: number;
 }> {
-  logger.info('🌱 Starting comprehensive idempotent MongoDB database seeding...');
+  logger.info('🌱 Starting idempotent MongoDB database seeding...');
 
   // 1. Seed Achievements
   const achievementOps: any[] = SYSTEM_ACHIEVEMENTS.map((achievement) => ({
@@ -98,20 +82,6 @@ export async function seedDatabase(): Promise<{
   await Roadmap.bulkWrite(roadmapOps);
   logger.info(`✅ Seeded ${rawRoadmaps.length} Roadmaps`);
 
-  // Collect all active 360 node IDs
-  const activeNodeIds: string[] = [];
-  for (const rm of rawRoadmaps) {
-    for (const node of rm.nodes) {
-      activeNodeIds.push(node.id);
-    }
-  }
-
-  // Clean obsolete legacy records before seeding active 360 nodes
-  await Assessment.deleteMany({ nodeId: { $nin: activeNodeIds } });
-  await Course.deleteMany({ nodeId: { $nin: activeNodeIds } });
-  await CodingChallenge.deleteMany({ nodeId: { $nin: activeNodeIds } });
-  await PracticalTask.deleteMany({ nodeId: { $nin: activeNodeIds } });
-
   // 6. Seed Projects
   const projectOps: any[] = rawProjects.map((project) => ({
     updateOne: {
@@ -134,63 +104,7 @@ export async function seedDatabase(): Promise<{
   await Resource.bulkWrite(resourceOps);
   logger.info(`✅ Seeded ${rawResources.length} Resources`);
 
-  // 8. Seed Complete 360 Courses
-  const courseOps: any[] = rawAllCourses.map((course) => ({
-    updateOne: {
-      filter: { nodeId: course.nodeId },
-      update: { $set: course },
-      upsert: true,
-    },
-  }));
-  await Course.bulkWrite(courseOps);
-  logger.info(`✅ Seeded ${rawAllCourses.length} Courses across all roadmap nodes`);
-
-  // 9. Seed Complete 360 Topic Assessments (3,600+ Questions)
-  const assessmentOps: any[] = rawAllAssessments.map((assessment) => ({
-    updateOne: {
-      filter: { nodeId: assessment.nodeId },
-      update: { $set: assessment },
-      upsert: true,
-    },
-  }));
-  await Assessment.bulkWrite(assessmentOps);
-  const totalQuestions = rawAllAssessments.reduce((acc, a) => acc + (a.questions?.length || 0), 0);
-  logger.info(`✅ Seeded ${rawAllAssessments.length} Assessments with ${totalQuestions} Questions`);
-
-  // 10. Seed Complete 360 Coding Challenges
-  const codingOps: any[] = rawAllChallenges.map((challenge) => ({
-    updateOne: {
-      filter: { nodeId: challenge.nodeId },
-      update: { $set: challenge },
-      upsert: true,
-    },
-  }));
-  await CodingChallenge.bulkWrite(codingOps);
-  logger.info(`✅ Seeded ${rawAllChallenges.length} Coding Challenges`);
-
-  // 11. Seed Complete 360 Practical Tasks
-  const taskOps: any[] = rawAllTasks.map((task) => ({
-    updateOne: {
-      filter: { nodeId: task.nodeId },
-      update: { $set: task },
-      upsert: true,
-    },
-  }));
-  await PracticalTask.bulkWrite(taskOps);
-  logger.info(`✅ Seeded ${rawAllTasks.length} Practical Tasks`);
-
-  // 12. Seed News
-  const newsOps: any[] = rawNews.map((news) => ({
-    updateOne: {
-      filter: { id: news.id },
-      update: { $set: news },
-      upsert: true,
-    },
-  }));
-  await News.bulkWrite(newsOps);
-  logger.info(`✅ Seeded ${rawNews.length} News Articles`);
-
-  logger.info('🎉 Full Database seeding completed successfully.');
+  logger.info('🎉 Database seeding completed successfully.');
 
   return {
     domainsCount: rawDomains.length,
@@ -200,11 +114,5 @@ export async function seedDatabase(): Promise<{
     projectsCount: rawProjects.length,
     resourcesCount: rawResources.length,
     achievementsCount: SYSTEM_ACHIEVEMENTS.length,
-    coursesCount: rawAllCourses.length,
-    assessmentsCount: rawAllAssessments.length,
-    totalQuestionsCount: totalQuestions,
-    codingChallengesCount: rawAllChallenges.length,
-    tasksCount: rawAllTasks.length,
-    newsCount: rawNews.length,
   };
 }

@@ -9,13 +9,6 @@ import skillRoutes from './skill.routes.js';
 import projectRoutes from './project.routes.js';
 import resourceRoutes from './resource.routes.js';
 import achievementRoutes from './achievement.routes.js';
-import recommendationRoutes from './recommendation.routes.js';
-import courseRoutes from './course.routes.js';
-import assessmentRoutes from './assessment.routes.js';
-import codingChallengeRoutes from './codingChallenge.routes.js';
-import taskRoutes from './task.routes.js';
-import newsRoutes from './news.routes.js';
-import submissionRoutes from './submission.routes.js';
 
 const apiRouter = Router();
 
@@ -29,12 +22,5 @@ apiRouter.use('/skills', skillRoutes);
 apiRouter.use('/projects', projectRoutes);
 apiRouter.use('/resources', resourceRoutes);
 apiRouter.use('/achievements', achievementRoutes);
-apiRouter.use('/recommendations', recommendationRoutes);
-apiRouter.use('/courses', courseRoutes);
-apiRouter.use('/assessments', assessmentRoutes);
-apiRouter.use('/challenges', codingChallengeRoutes);
-apiRouter.use('/tasks', taskRoutes);
-apiRouter.use('/news', newsRoutes);
-apiRouter.use('/submissions', submissionRoutes);
 
 export default apiRouter;

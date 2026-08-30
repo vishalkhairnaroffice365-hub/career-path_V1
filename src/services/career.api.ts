@@ -13,9 +13,7 @@ export const careerApi = {
     return res.data.data;
   },
 
-  async selectCareer(
-    careerId: string
-  ): Promise<{ selectedCareer: Career; user: UserProfile; unlockedAchievements: string[] }> {
+  async selectCareer(careerId: string): Promise<{ selectedCareer: Career; user: UserProfile; unlockedAchievements: string[] }> {
     const res = await api.post<{
       success: boolean;
       data: { selectedCareer: Career; user: UserProfile; unlockedAchievements: string[] };
@@ -34,16 +32,12 @@ export const careerApi = {
   },
 
   async addToCompare(careerId: string): Promise<Career[]> {
-    const res = await api.post<{ success: boolean; data: Career[] }>('/careers/compare', {
-      careerId,
-    });
+    const res = await api.post<{ success: boolean; data: Career[] }>('/careers/compare', { careerId });
     return res.data.data;
   },
 
   async removeFromCompare(careerId: string): Promise<Career[]> {
-    const res = await api.delete<{ success: boolean; data: Career[] }>(
-      `/careers/compare/${careerId}`
-    );
+    const res = await api.delete<{ success: boolean; data: Career[] }>(`/careers/compare/${careerId}`);
     return res.data.data;
   },
 

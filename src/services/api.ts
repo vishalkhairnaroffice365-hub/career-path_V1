@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-// Resolve base API URL from Vite environment variable (fallback to relative /api/v1 via Vite proxy or direct port 5000)
+// Resolve base API URL from Vite environment variable (fallback to default)
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 6000, // 6s timeout for fast response & graceful fallback
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,9 +33,7 @@ api.interceptors.response.use(
   (error) => {
     // If unauthorized, clean up token
     if (error.response && error.response.status === 401) {
-      const isAuthRoute =
-        error.config?.url?.includes('/auth/login') ||
-        error.config?.url?.includes('/auth/register');
+      const isAuthRoute = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
       if (!isAuthRoute) {
         localStorage.removeItem('career_path_token');
       }
@@ -44,7 +42,7 @@ api.interceptors.response.use(
     const message =
       error.response?.data?.message ||
       error.message ||
-      'An unexpected network error occurred. Please try again.';
+      'An unexpected error occurred. Please try again.';
 
     return Promise.reject(new Error(message));
   }

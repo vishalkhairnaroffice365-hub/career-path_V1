@@ -11,24 +11,20 @@ export interface SkillGapAnalysis {
     missing: number;
     total: number;
   };
-  skills: {
+  skills: Array<{
     skill: Skill;
     status: 'acquired' | 'learning' | 'missing';
-  }[];
+  }>;
 }
 
 export const skillApi = {
-  async getSkills(category?: string): Promise<Skill[]> {
-    const res = await api.get<{ success: boolean; data: Skill[] }>('/skills', {
-      params: { category },
-    });
+  async getSkills(params?: { category?: string }): Promise<Skill[]> {
+    const res = await api.get<{ success: boolean; data: Skill[] }>('/skills', { params });
     return res.data.data;
   },
 
   async getSkillGap(careerId: string): Promise<SkillGapAnalysis> {
-    const res = await api.get<{ success: boolean; data: SkillGapAnalysis }>(
-      `/skills/gap/${careerId}`
-    );
+    const res = await api.get<{ success: boolean; data: SkillGapAnalysis }>(`/skills/gap/${careerId}`);
     return res.data.data;
   },
 };

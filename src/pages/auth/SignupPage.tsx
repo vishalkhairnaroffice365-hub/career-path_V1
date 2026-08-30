@@ -5,7 +5,6 @@ import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useCareer } from '../../context/CareerContext';
-import { useUI } from '../../context/UIContext';
 import { authApi } from '../../services/auth.api';
 
 const fadeUp = {
@@ -20,7 +19,6 @@ const fadeUp = {
 export default function SignupPage() {
   const navigate = useNavigate();
   const { login } = useCareer();
-  const { addToast } = useUI();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +30,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (!name.trim() || !email.trim() || !password) {
+    if (!name || !email || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -44,9 +42,9 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const res = await authApi.register({ name: name.trim(), email: email.trim().toLowerCase(), password });
+      const res = await authApi.register(name, email, password);
+      localStorage.setItem('career_path_token', res.token);
       login(res.user);
-      addToast({ type: 'success', message: "Account created! Let's discover your path. ✨" });
       navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');

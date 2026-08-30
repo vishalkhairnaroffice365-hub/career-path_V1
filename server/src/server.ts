@@ -25,7 +25,7 @@ app.use(
 const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
 app.use(
   cors({
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, or server-to-server)
       if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -49,7 +49,7 @@ if (env.NODE_ENV !== 'test') {
   app.use(
     morgan(':method :url :status :res[content-length] - :response-time ms', {
       stream: {
-        write: (message: string) => logger.info(message.trim()),
+        write: (message) => logger.info(message.trim()),
       },
     })
   );

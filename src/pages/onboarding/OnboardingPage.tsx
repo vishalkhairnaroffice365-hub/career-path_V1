@@ -47,16 +47,27 @@ const slideVariants = {
   }),
 };
 
+import { userApi } from '../../services/user.api';
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const { currentStepIndex, progress, nextStep, prevStep, isFirstStep, isLastStep } = useOnboarding();
+  const { currentStepIndex, progress, nextStep, prevStep, isFirstStep, isLastStep, state } = useOnboarding();
   const totalSteps = STEP_META.length;
   const [direction, setDirection] = React.useState(1);
 
   const CurrentStep = stepComponents[currentStepIndex];
   const meta = STEP_META[currentStepIndex];
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Sync onboarding data to backend
+    if (state.data && Object.keys(state.data).length > 0) {
+      try {
+        await userApi.saveOnboarding(state.data);
+      } catch (err) {
+        console.warn('Could not save onboarding data to backend:', err);
+      }
+    }
+
     if (isLastStep) {
       navigate('/profile-reflection');
     } else {

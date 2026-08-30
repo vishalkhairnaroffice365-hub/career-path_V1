@@ -1,6 +1,6 @@
-import { useRef, useMemo, useState  } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Float, Stars } from '@react-three/drei';
+import { Float, Stars, OrbitControls, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Domain, SubDomain } from '../../data/domains';
 
@@ -35,11 +35,11 @@ function CloudSphere({ color, emissive, scale, opacity = 0.85 }: CloudSphereProp
           <meshStandardMaterial
             color={color}
             emissive={emissive}
-            emissiveIntensity={0.12}
+            emissiveIntensity={0.15}
             transparent
             opacity={opacity - i * 0.04}
-            roughness={0.95}
-            metalness={0.0}
+            roughness={0.9}
+            metalness={0.05}
             depthWrite={false}
           />
         </mesh>
@@ -72,11 +72,11 @@ function DomainCloud({ domain, isActive, isHovered, onClick, onHover }: DomainCl
       domain.position[1] + Math.sin(state.clock.elapsedTime * 0.5 + domain.position[0]) * 0.18;
 
     // Scale on hover/active
-    const targetScale = isActive ? 1.25 : isHovered ? 1.1 : 1.0;
+    const targetScale = isActive ? 1.25 : isHovered ? 1.12 : 1.0;
     groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06);
 
     // Glow pulse
-    if (glowRef.current) {
+    if (glowRef.current && glowRef.current.material) {
       (glowRef.current.material as any).opacity =
         (isHovered || isActive ? 0.25 : 0.1) + Math.sin(state.clock.elapsedTime * 1.2) * 0.05;
     }
@@ -89,7 +89,6 @@ function DomainCloud({ domain, isActive, isHovered, onClick, onHover }: DomainCl
 
   const baseColor = new THREE.Color(domain.theme.primaryColor);
 
-
   return (
     <group
       ref={groupRef}
@@ -98,6 +97,32 @@ function DomainCloud({ domain, isActive, isHovered, onClick, onHover }: DomainCl
       onPointerEnter={(e) => { e.stopPropagation(); onHover(domain.id); }}
       onPointerLeave={(e) => { e.stopPropagation(); onHover(null); }}
     >
+      {/* 3D Billboard Label for Cloud */}
+      <Html
+        position={[0, domain.scale * 1.5, 0]}
+        center
+        distanceFactor={18}
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <div
+          className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md border transition-all duration-200 shadow-lg ${
+            isActive
+              ? 'bg-blue-600/90 text-white border-blue-400 scale-110 shadow-blue-500/50'
+              : isHovered
+              ? 'bg-slate-900/90 text-white border-blue-400 scale-105 shadow-cyan-500/30'
+              : 'bg-slate-950/80 text-slate-200 border-white/10 hover:border-white/30'
+          }`}
+        >
+          <span className="mr-1.5">{domain.icon}</span>
+          {domain.name}
+        </div>
+      </Html>
+
       {/* Point light for domain atmosphere */}
       <pointLight
         ref={lightRef}
@@ -162,7 +187,6 @@ interface SubDomainCloudProps {
 function SubDomainCloud({ subDomain, domain, isHovered, onClick, onHover, centerPos }: SubDomainCloudProps) {
   const groupRef = useRef<THREE.Group>(null);
 
-  // Position relative to parent domain in world space
   const worldPos: [number, number, number] = [
     centerPos[0] + subDomain.position[0],
     centerPos[1] + subDomain.position[1],
@@ -188,6 +212,28 @@ function SubDomainCloud({ subDomain, domain, isHovered, onClick, onHover, center
       onPointerEnter={(e) => { e.stopPropagation(); onHover(subDomain.id); }}
       onPointerLeave={(e) => { e.stopPropagation(); onHover(null); }}
     >
+      <Html
+        position={[0, subDomain.scale * 1.4, 0]}
+        center
+        distanceFactor={15}
+        style={{
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <div
+          className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium backdrop-blur-md border transition-all shadow-md ${
+            isHovered
+              ? 'bg-blue-600/90 text-white border-blue-400 scale-105'
+              : 'bg-slate-900/80 text-slate-200 border-white/15'
+          }`}
+        >
+          <span className="mr-1">{subDomain.icon}</span>
+          {subDomain.name}
+        </div>
+      </Html>
+
       <pointLight color={domain.theme.secondaryColor} intensity={0.8} distance={4} decay={2} />
 
       <Float speed={1.8} floatIntensity={0}>
@@ -219,44 +265,55 @@ function SubDomainCloud({ subDomain, domain, isHovered, onClick, onHover, center
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function AmbientParticles({ activeDomain }: { activeDomain: Domain | null }) {
-  const meshRef = useRef<THREE.Points>(null);
-  const COUNT = 200;
+  const pointsRef = useRef<THREE.Points>(null);
 
   const [positions, colors] = useMemo(() => {
+    const COUNT = 350;
     const pos = new Float32Array(COUNT * 3);
     const col = new Float32Array(COUNT * 3);
-    const color = new THREE.Color(activeDomain?.theme.primaryColor || '#6366f1');
 
     for (let i = 0; i < COUNT; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 40;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 40;
-      col[i * 3] = color.r;
-      col[i * 3 + 1] = color.g;
-      col[i * 3 + 2] = color.b;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(Math.random() * 2 - 1);
+      const r = 4 + Math.random() * 16;
+
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 8;
+      pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+      const c = new THREE.Color(
+        activeDomain ? activeDomain.theme.primaryColor : '#60a5fa'
+      );
+      col[i * 3] = c.r;
+      col[i * 3 + 1] = c.g;
+      col[i * 3 + 2] = c.b;
     }
     return [pos, col];
   }, [activeDomain]);
 
   useFrame((state) => {
-    if (!meshRef.current) return;
-    meshRef.current.rotation.y = state.clock.elapsedTime * 0.015;
-    meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.005) * 0.05;
+    if (!pointsRef.current) return;
+    pointsRef.current.rotation.y = state.clock.elapsedTime * 0.02;
   });
 
   return (
-    <points ref={meshRef}>
+    <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+        />
+        <bufferAttribute
+          attach="attributes-color"
+          args={[colors, 3]}
+        />
       </bufferGeometry>
       <pointsMaterial
-        size={0.06}
+        size={0.1}
         vertexColors
         transparent
         opacity={0.6}
         sizeAttenuation
-        depthWrite={false}
       />
     </points>
   );
@@ -269,26 +326,39 @@ function AmbientParticles({ activeDomain }: { activeDomain: Domain | null }) {
 interface CameraControllerProps {
   targetPosition: [number, number, number];
   targetLookAt: [number, number, number];
+  enabled: boolean;
 }
 
-function CameraController({ targetPosition, targetLookAt }: CameraControllerProps) {
+function CameraController({
+  targetPosition,
+  targetLookAt,
+  enabled,
+}: CameraControllerProps) {
   const { camera } = useThree();
-  const lookAtVec = useRef(new THREE.Vector3(...targetLookAt));
-  const posVec = useRef(new THREE.Vector3(...targetPosition));
+  const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
 
   useFrame(() => {
-    posVec.current.lerp(new THREE.Vector3(...targetPosition), 0.04);
-    lookAtVec.current.lerp(new THREE.Vector3(...targetLookAt), 0.05);
+    if (!enabled) return;
 
-    camera.position.copy(posVec.current);
-    camera.lookAt(lookAtVec.current);
+    // Smooth camera position interpolation
+    camera.position.lerp(
+      new THREE.Vector3(...targetPosition),
+      0.04
+    );
+
+    // Smooth camera lookAt interpolation
+    currentLookAt.current.lerp(
+      new THREE.Vector3(...targetLookAt),
+      0.04
+    );
+    camera.lookAt(currentLookAt.current);
   });
 
   return null;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SCENE — composites everything
+// MAIN SKY SCENE COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export type CameraView = 'SKY_VIEW' | 'DOMAIN_VIEW' | 'CAREER_VIEW';
@@ -314,12 +384,12 @@ export function SkyScene({
   // Camera positions for each view
   const cameraPos: [number, number, number] =
     cameraView === 'SKY_VIEW'
-      ? [0, 2, 18]
+      ? [0, 3, 22]
       : cameraView === 'DOMAIN_VIEW' && activeDomain
       ? [
-          activeDomain.position[0] * 0.5,
-          activeDomain.position[1] + 1,
-          activeDomain.position[2] + 8,
+          activeDomain.position[0] * 0.6,
+          activeDomain.position[1] + 1.2,
+          activeDomain.position[2] + 9,
         ]
       : [0, 2, 10];
 
@@ -332,17 +402,34 @@ export function SkyScene({
 
   return (
     <>
-      {/* Camera */}
-      <CameraController targetPosition={cameraPos} targetLookAt={cameraLookAt} />
+      {/* Dynamic Camera Animation on domain selection */}
+      <CameraController
+        targetPosition={cameraPos}
+        targetLookAt={cameraLookAt}
+        enabled={cameraView === 'DOMAIN_VIEW'}
+      />
+
+      {/* Orbit Controls for drag/rotate/zoom when exploring full Sky view */}
+      {cameraView === 'SKY_VIEW' && (
+        <OrbitControls
+          enablePan={false}
+          minDistance={10}
+          maxDistance={32}
+          maxPolarAngle={Math.PI / 1.7}
+          minPolarAngle={Math.PI / 4}
+          dampingFactor={0.05}
+          rotateSpeed={0.6}
+        />
+      )}
 
       {/* Lighting */}
-      <ambientLight intensity={0.3} color="#8b9bbf" />
-      <directionalLight position={[10, 10, 5]} intensity={0.6} color="#c7d2fe" />
+      <ambientLight intensity={0.35} color="#8b9bbf" />
+      <directionalLight position={[10, 10, 5]} intensity={0.7} color="#c7d2fe" />
       <pointLight position={[-10, 5, -10]} intensity={0.5} color="#818cf8" />
-      <pointLight position={[10, -5, -10]} intensity={0.3} color="#06b6d4" />
+      <pointLight position={[10, -5, -10]} intensity={0.4} color="#06b6d4" />
 
       {/* Stars */}
-      <Stars radius={80} depth={50} count={3000} factor={3} saturation={0.3} fade speed={0.5} />
+      <Stars radius={80} depth={50} count={3500} factor={3.5} saturation={0.3} fade speed={0.5} />
 
       {/* Ambient particles */}
       <AmbientParticles activeDomain={activeDomain} />

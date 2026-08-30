@@ -15,6 +15,14 @@ export interface RoadmapNode {
   phase: number; // 1 = foundation, 2 = core, 3 = advanced, 4 = launch
 }
 
+export interface RoadmapPhase {
+  id: number;
+  name: string;
+  description: string;
+  color: string;
+  duration: string;
+}
+
 export interface Roadmap {
   id: string;
   careerId: string;
@@ -25,86 +33,14 @@ export interface Roadmap {
   nodes: RoadmapNode[];
 }
 
-export interface RoadmapPhase {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-  duration: string;
-}
+export type CareerRoadmap = Roadmap;
 
-export const roadmaps: Roadmap[] = [
-  {
-    id: 'android-developer-roadmap',
-    careerId: 'android-developer',
-    title: 'Android Developer Path',
-    description: 'From zero to shipping production Android apps in 8-12 months',
-    totalDuration: '8-12 months',
-    phases: [
-      { id: 1, name: 'Foundation', description: 'Core programming fundamentals', color: '#3b82f6', duration: '2 months' },
-      { id: 2, name: 'Android Core', description: 'Android SDK and Kotlin', color: '#8b5cf6', duration: '3 months' },
-      { id: 3, name: 'Advanced', description: 'Architecture and production patterns', color: '#06b6d4', duration: '2 months' },
-      { id: 4, name: 'Launch Ready', description: 'Portfolio and job search', color: '#10b981', duration: '1-5 months' },
-    ],
-    nodes: [
-      { id: 'kotlin-basics', title: 'Kotlin Fundamentals', description: 'Variables, functions, OOP, null safety, and coroutines basics', type: 'skill', duration: '4 weeks', skillIds: ['kotlin'], resourceIds: ['kotlin-course'], projectIds: [], prerequisites: [], status: 'completed', position: { x: 1, y: 1 }, phase: 1 },
-      { id: 'android-setup', title: 'Android Studio Setup', description: 'IDE setup, emulator, and first Hello World app', type: 'milestone', duration: '1 week', skillIds: ['android-sdk'], resourceIds: [], projectIds: ['hello-android'], prerequisites: ['kotlin-basics'], status: 'completed', position: { x: 1, y: 2 }, phase: 1 },
-      { id: 'git-basics', title: 'Git & Version Control', description: 'Git fundamentals, branching, and GitHub', type: 'skill', duration: '1 week', skillIds: ['git'], resourceIds: ['git-course'], projectIds: [], prerequisites: [], status: 'completed', position: { x: 2, y: 1 }, phase: 1 },
-      { id: 'android-ui', title: 'Jetpack Compose UI', description: 'Build declarative UIs with Compose. Layouts, state, and theming.', type: 'skill', duration: '5 weeks', skillIds: ['jetpack-compose'], resourceIds: ['compose-docs'], projectIds: ['ui-clone'], prerequisites: ['android-setup'], status: 'in-progress', position: { x: 1, y: 3 }, phase: 2 },
-      { id: 'android-architecture', title: 'MVVM Architecture', description: 'ViewModel, LiveData, StateFlow, and Repository pattern', type: 'skill', duration: '3 weeks', skillIds: ['android-sdk'], resourceIds: ['architecture-guide'], projectIds: [], prerequisites: ['android-ui'], status: 'available', position: { x: 1, y: 4 }, phase: 2 },
-      { id: 'android-networking', title: 'Networking & APIs', description: 'Retrofit, OkHttp, and consuming REST APIs', type: 'skill', duration: '2 weeks', skillIds: ['android-sdk'], resourceIds: ['retrofit-docs'], projectIds: ['weather-app'], prerequisites: ['android-architecture'], status: 'locked', position: { x: 1, y: 5 }, phase: 2 },
-      { id: 'android-database', title: 'Local Database (Room)', description: 'Room persistence library, DAO, and offline-first patterns', type: 'skill', duration: '2 weeks', skillIds: ['android-sdk'], resourceIds: ['room-docs'], projectIds: [], prerequisites: ['android-architecture'], status: 'locked', position: { x: 2, y: 5 }, phase: 2 },
-      { id: 'android-midpoint', title: 'Project: Complete App', description: 'Build a complete CRUD app using everything learned so far', type: 'project', duration: '3 weeks', skillIds: [], resourceIds: [], projectIds: ['notes-app'], prerequisites: ['android-networking', 'android-database'], status: 'locked', position: { x: 1, y: 6 }, phase: 2 },
-      { id: 'advanced-kotlin', title: 'Advanced Kotlin', description: 'Coroutines, Flow, sealed classes, and DSL patterns', type: 'skill', duration: '3 weeks', skillIds: ['kotlin'], resourceIds: ['kotlin-advanced'], projectIds: [], prerequisites: ['android-midpoint'], status: 'locked', position: { x: 1, y: 7 }, phase: 3 },
-      { id: 'dependency-injection', title: 'Dependency Injection', description: 'Hilt/Dagger for scalable dependency management', type: 'skill', duration: '2 weeks', skillIds: ['android-sdk'], resourceIds: ['hilt-docs'], projectIds: [], prerequisites: ['android-midpoint'], status: 'locked', position: { x: 2, y: 7 }, phase: 3 },
-      { id: 'testing', title: 'Testing', description: 'Unit testing, integration tests, and UI tests with Espresso', type: 'skill', duration: '2 weeks', skillIds: ['android-sdk'], resourceIds: ['testing-docs'], projectIds: [], prerequisites: ['advanced-kotlin'], status: 'locked', position: { x: 1, y: 8 }, phase: 3 },
-      { id: 'capstone-project', title: 'Capstone Project', description: 'Build and ship a production-quality app to the Play Store', type: 'milestone', duration: '4 weeks', skillIds: [], resourceIds: [], projectIds: ['capstone-android'], prerequisites: ['testing', 'dependency-injection'], status: 'locked', position: { x: 1, y: 9 }, phase: 4 },
-      { id: 'portfolio', title: 'Portfolio & Resume', description: 'Polish projects, write case studies, and prepare for interviews', type: 'checkpoint', duration: '2 weeks', skillIds: [], resourceIds: ['portfolio-guide'], projectIds: [], prerequisites: ['capstone-project'], status: 'locked', position: { x: 1, y: 10 }, phase: 4 },
-    ],
-  },
-  {
-    id: 'ml-engineer-roadmap',
-    careerId: 'ml-engineer',
-    title: 'ML Engineer Path',
-    description: 'From programming fundamentals to deploying production ML systems',
-    totalDuration: '12-18 months',
-    phases: [
-      { id: 1, name: 'Math & Python', description: 'Mathematical foundations and Python expertise', color: '#6366f1', duration: '3 months' },
-      { id: 2, name: 'ML Fundamentals', description: 'Core machine learning algorithms', color: '#8b5cf6', duration: '4 months' },
-      { id: 3, name: 'Deep Learning', description: 'Neural networks and advanced models', color: '#06b6d4', duration: '3 months' },
-      { id: 4, name: 'MLOps & Production', description: 'Deploying and monitoring ML systems', color: '#10b981', duration: '2-8 months' },
-    ],
-    nodes: [
-      { id: 'python-ml', title: 'Python for ML', description: 'Python fundamentals, NumPy, and data manipulation', type: 'skill', duration: '4 weeks', skillIds: ['python', 'pandas'], resourceIds: ['python-course'], projectIds: [], prerequisites: [], status: 'completed', position: { x: 1, y: 1 }, phase: 1 },
-      { id: 'math-ml', title: 'Math Foundations', description: 'Linear algebra, calculus, statistics, and probability', type: 'skill', duration: '6 weeks', skillIds: ['statistics', 'linear-algebra'], resourceIds: ['3b1b-la', 'khan-stats'], projectIds: [], prerequisites: [], status: 'completed', position: { x: 2, y: 1 }, phase: 1 },
-      { id: 'ml-fundamentals', title: 'ML Algorithms', description: 'Regression, classification, clustering, and model evaluation', type: 'skill', duration: '8 weeks', skillIds: ['tensorflow'], resourceIds: ['ml-course'], projectIds: ['titanic-kaggle'], prerequisites: ['python-ml', 'math-ml'], status: 'in-progress', position: { x: 1, y: 2 }, phase: 2 },
-      { id: 'feature-engineering', title: 'Feature Engineering', description: 'Data preprocessing, feature selection, and dimensionality reduction', type: 'skill', duration: '3 weeks', skillIds: ['pandas'], resourceIds: [], projectIds: [], prerequisites: ['ml-fundamentals'], status: 'locked', position: { x: 1, y: 3 }, phase: 2 },
-      { id: 'deep-learning', title: 'Deep Learning', description: 'Neural networks, CNNs, RNNs, and transformers', type: 'skill', duration: '8 weeks', skillIds: ['pytorch', 'tensorflow'], resourceIds: ['fast-ai', 'deep-learning-book'], projectIds: ['image-classifier'], prerequisites: ['feature-engineering'], status: 'locked', position: { x: 1, y: 4 }, phase: 3 },
-      { id: 'nlp-basics', title: 'NLP Fundamentals', description: 'Text processing, embeddings, and language models', type: 'skill', duration: '4 weeks', skillIds: ['pytorch'], resourceIds: ['huggingface-course'], projectIds: [], prerequisites: ['deep-learning'], status: 'locked', position: { x: 2, y: 4 }, phase: 3 },
-      { id: 'mlops', title: 'MLOps & Deployment', description: 'Model serving, monitoring, MLflow, and Kubernetes', type: 'skill', duration: '5 weeks', skillIds: ['docker'], resourceIds: ['mlops-zoomcamp'], projectIds: ['deploy-model'], prerequisites: ['deep-learning'], status: 'locked', position: { x: 1, y: 5 }, phase: 4 },
-      { id: 'ml-capstone', title: 'ML Capstone Project', description: 'End-to-end ML project: data → model → deployment', type: 'milestone', duration: '5 weeks', skillIds: [], resourceIds: [], projectIds: ['ml-capstone-project'], prerequisites: ['mlops', 'nlp-basics'], status: 'locked', position: { x: 1, y: 6 }, phase: 4 },
-    ],
-  },
-  {
-    id: 'frontend-developer-roadmap',
-    careerId: 'frontend-developer',
-    title: 'Frontend Developer Path',
-    description: 'From HTML basics to shipping production React applications',
-    totalDuration: '6-10 months',
-    phases: [
-      { id: 1, name: 'Web Basics', description: 'HTML, CSS, and vanilla JavaScript', color: '#f97316', duration: '2 months' },
-      { id: 2, name: 'React Ecosystem', description: 'React and modern tooling', color: '#fb923c', duration: '2 months' },
-      { id: 3, name: 'Advanced', description: 'Performance, testing, and architecture', color: '#fbbf24', duration: '2 months' },
-      { id: 4, name: 'Career Ready', description: 'Portfolio and job preparation', color: '#10b981', duration: '1-4 months' },
-    ],
-    nodes: [
-      { id: 'html-css-basics', title: 'HTML & CSS', description: 'Semantic HTML, CSS layouts, flexbox, grid, and responsive design', type: 'skill', duration: '4 weeks', skillIds: ['html-css'], resourceIds: ['mdn-html', 'css-tricks'], projectIds: ['landing-page'], prerequisites: [], status: 'completed', position: { x: 1, y: 1 }, phase: 1 },
-      { id: 'js-basics', title: 'JavaScript Fundamentals', description: 'DOM manipulation, events, async/await, and ES6+', type: 'skill', duration: '5 weeks', skillIds: ['javascript'], resourceIds: ['javascript-info'], projectIds: ['todo-app-vanilla'], prerequisites: ['html-css-basics'], status: 'completed', position: { x: 1, y: 2 }, phase: 1 },
-      { id: 'typescript-intro', title: 'TypeScript', description: 'Types, interfaces, generics, and TypeScript config', type: 'skill', duration: '2 weeks', skillIds: ['typescript'], resourceIds: ['ts-docs'], projectIds: [], prerequisites: ['js-basics'], status: 'in-progress', position: { x: 1, y: 3 }, phase: 2 },
-      { id: 'react-core', title: 'React Core', description: 'Components, hooks, state management, and React Router', type: 'skill', duration: '5 weeks', skillIds: ['react'], resourceIds: ['react-dev'], projectIds: ['react-todo'], prerequisites: ['typescript-intro'], status: 'available', position: { x: 1, y: 4 }, phase: 2 },
-      { id: 'nextjs', title: 'Next.js', description: 'Server-side rendering, routing, and API routes', type: 'skill', duration: '3 weeks', skillIds: ['react'], resourceIds: ['nextjs-docs'], projectIds: [], prerequisites: ['react-core'], status: 'locked', position: { x: 1, y: 5 }, phase: 3 },
-      { id: 'frontend-testing', title: 'Testing', description: 'Unit tests with Vitest and E2E with Playwright', type: 'skill', duration: '2 weeks', skillIds: ['javascript'], resourceIds: ['testing-library'], projectIds: [], prerequisites: ['react-core'], status: 'locked', position: { x: 2, y: 5 }, phase: 3 },
-      { id: 'frontend-capstone', title: 'Capstone: Full Project', description: 'Build a complete React application with auth, routing, and API', type: 'milestone', duration: '4 weeks', skillIds: [], resourceIds: [], projectIds: ['portfolio-site', 'saas-clone'], prerequisites: ['nextjs', 'frontend-testing'], status: 'locked', position: { x: 1, y: 6 }, phase: 4 },
-    ],
-  },
-];
+import { rawRoadmaps } from '../../server/src/services/seedData/roadmaps.data';
+
+export const roadmaps: Roadmap[] = rawRoadmaps.map((r) => ({
+  ...r,
+  nodes: r.nodes.map((n) => ({
+    ...n,
+    status: n.defaultStatus as RoadmapNodeStatus,
+  })),
+}));

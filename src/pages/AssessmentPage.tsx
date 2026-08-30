@@ -8,6 +8,8 @@ import { QuestionCard } from '../components/assessment/QuestionCard';
 import { TestTimer } from '../components/assessment/TestTimer';
 import { TestResult } from '../components/assessment/TestResult';
 
+import { assessmentApi } from '../services/assessment.api';
+
 type TestPhase = 'intro' | 'test' | 'result';
 
 export default function AssessmentPage() {
@@ -21,6 +23,7 @@ export default function AssessmentPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timerKey, setTimerKey] = useState(0); // increment to reset timer on retry
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const existingScore = nodeId ? learning.assessmentScores[nodeId] : undefined;
 
@@ -43,18 +46,28 @@ export default function AssessmentPage() {
   const currentQuestion = questions[currentIndex];
   const allAnswered = Object.keys(answers).length === questions.length;
 
-  const submitTest = (_expired = false) => {
+  const submitTest = async (_expired = false) => {
+    setIsSubmitting(true);
     const correct = questions.filter((q) => answers[q.id] === q.correctAnswer).length;
-    const score = Math.round((correct / questions.length) * 100);
+    const score = Math.round((correct / (questions.length || 1)) * 100);
     const passed = score >= assessment.passingScore;
+
     saveAssessmentScore({
       nodeId,
       score,
       passed,
-      attempts: 1,
+      attempts: (existingScore?.attempts || 0) + 1,
       lastAttemptAt: new Date().toISOString(),
     });
-    setPhase('result');
+
+    try {
+      await assessmentApi.submitAssessment(nodeId, answers);
+    } catch (err) {
+      console.warn('Backend assessment submission sync failed:', err);
+    } finally {
+      setIsSubmitting(false);
+      setPhase('result');
+    }
   };
 
   const handleRetry = () => {
@@ -160,11 +173,11 @@ export default function AssessmentPage() {
             <div className="flex justify-end">
               <motion.button
                 onClick={() => submitTest(false)}
-                disabled={!allAnswered}
-                whileHover={allAnswered ? { scale: 1.02 } : {}}
+                disabled={!allAnswered || isSubmitting}
+                whileHover={allAnswered && !isSubmitting ? { scale: 1.02 } : {}}
                 className="inline-flex items-center gap-2 px-8 py-3 bg-success text-white rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
-                Submit Test ({Object.keys(answers).length}/{questions.length} answered)
+                {isSubmitting ? 'Submitting...' : `Submit Test (${Object.keys(answers).length}/${questions.length} answered)`}
               </motion.button>
             </div>
           </motion.div>

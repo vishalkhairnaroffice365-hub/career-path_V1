@@ -5,19 +5,22 @@ import { User, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useCareer } from '../../context/CareerContext';
+import { useUI } from '../../context/UIContext';
+import { authApi } from '../../services/auth.api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   visible: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.8, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const },
   }),
 };
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const { login } = useCareer();
+  const { addToast } = useUI();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +32,7 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -40,11 +43,16 @@ export default function SignupPage() {
     }
 
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-
-    // Store user and navigate to onboarding
-    login({ name, email });
-    navigate('/onboarding');
+    try {
+      const res = await authApi.register({ name: name.trim(), email: email.trim().toLowerCase(), password });
+      login(res.user);
+      addToast({ type: 'success', message: "Account created! Let's discover your path. ✨" });
+      navigate('/onboarding');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

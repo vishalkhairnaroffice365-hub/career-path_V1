@@ -77,6 +77,7 @@ function AppRoutes() {
           <Route path="/career/:careerId" element={<ProtectedRoute><CareerDetailsPage /></ProtectedRoute>} />
           <Route path="/compare" element={<ProtectedRoute><CareerComparisonPage /></ProtectedRoute>} />
           <Route path="/select" element={<ProtectedRoute><CareerSelectionPage /></ProtectedRoute>} />
+          <Route path="/select-career" element={<ProtectedRoute><CareerSelectionPage /></ProtectedRoute>} />
           <Route path="/skill-gap" element={<ProtectedRoute><SkillGapPage /></ProtectedRoute>} />
           <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />
           <Route path="/resources" element={<ProtectedRoute><ResourcesPage /></ProtectedRoute>} />

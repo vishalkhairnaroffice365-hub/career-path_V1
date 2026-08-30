@@ -42,20 +42,30 @@ export function Badge({ variant = 'default', children, className, icon }: BadgeP
 
 // Demand level badge
 interface DemandBadgeProps {
-  level: 'explosive' | 'high' | 'moderate' | 'stable';
+  level?: 'explosive' | 'high' | 'moderate' | 'stable' | string;
+  demand?: 'explosive' | 'high' | 'moderate' | 'stable' | string;
+  className?: string;
 }
 
-const demandConfig = {
-  explosive: { variant: 'green' as BadgeVariant, label: '🚀 Explosive Growth', pulse: true },
-  high: { variant: 'cyan' as BadgeVariant, label: '📈 High Demand', pulse: false },
-  moderate: { variant: 'yellow' as BadgeVariant, label: '📊 Moderate Demand', pulse: false },
-  stable: { variant: 'default' as BadgeVariant, label: '📌 Stable Demand', pulse: false },
+const demandConfig: Record<string, { variant: BadgeVariant; label: string; pulse: boolean }> = {
+  explosive: { variant: 'green', label: '🚀 Explosive Growth', pulse: true },
+  high: { variant: 'cyan', label: '📈 High Demand', pulse: false },
+  moderate: { variant: 'yellow', label: '📊 Moderate Demand', pulse: false },
+  stable: { variant: 'default', label: '📌 Stable Demand', pulse: false },
 };
 
-export function DemandBadge({ level }: DemandBadgeProps) {
-  const config = demandConfig[level];
+export function DemandBadge({ level, demand, className }: DemandBadgeProps) {
+  const rawKey = (level || demand || 'high').toString().toLowerCase();
+  const config = demandConfig[rawKey] || demandConfig.high;
+
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border', variantClasses[config.variant])}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border',
+        variantClasses[config.variant] || variantClasses.default,
+        className
+      )}
+    >
       {config.pulse && (
         <span className="relative flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

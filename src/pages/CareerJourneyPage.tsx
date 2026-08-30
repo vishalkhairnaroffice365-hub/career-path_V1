@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle, Lock } from 'lucide-react';
+import { ArrowRight, Lock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Progress } from '../components/ui/Progress';
 import { useCareer } from '../context/CareerContext';

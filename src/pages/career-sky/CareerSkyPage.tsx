@@ -1,8 +1,8 @@
-import { useState, Suspense  } from 'react';
+import { useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, TrendingUp, Star } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Sparkles, Compass } from 'lucide-react';
 import { domains, type Domain, type SubDomain } from '../../data/domains';
 import { careers } from '../../data/careers';
 import { SkyScene, type CameraView } from '../../components/sky/SkyScene';
@@ -14,14 +14,22 @@ import { useUI } from '../../context/UIContext';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DOMAIN INFO PANEL
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function DomainInfoPanel({ domain, onBack }: { domain: Domain; onBack: () => void }) {
+function DomainInfoPanel({
+  domain,
+  onBack,
+  onSelectSubDomain,
+}: {
+  domain: Domain;
+  onBack: () => void;
+  onSelectSubDomain: (sub: SubDomain) => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -32 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -32 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute left-6 top-1/2 -translate-y-1/2 w-80 bg-black/40 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 text-white shadow-2xl"
+      className="absolute left-6 top-1/2 -translate-y-1/2 w-84 max-h-[85vh] overflow-y-auto bg-black/65 backdrop-blur-2xl rounded-3xl p-6 border border-white/10 text-white shadow-2xl z-30 custom-scrollbar"
     >
       <button
         onClick={onBack}
@@ -46,20 +54,24 @@ function DomainInfoPanel({ domain, onBack }: { domain: Domain; onBack: () => voi
         ].map((stat) => (
           <div key={stat.label} className="bg-white/5 rounded-2xl p-3 border border-white/5">
             <p className="text-xs text-white/50 mb-1">{stat.label}</p>
-            <p className="font-display font-bold text-white">{stat.value}</p>
+            <p className="font-display font-bold text-white text-sm">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      <p className="text-white/70 text-sm leading-relaxed mb-5">{domain.description}</p>
+      <p className="text-white/70 text-xs leading-relaxed mb-5">{domain.description}</p>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-white/40 mb-2 uppercase tracking-wider">Click a cloud to explore</p>
+        <p className="text-xs font-semibold text-white/40 mb-2 uppercase tracking-wider">Sub-Domains</p>
         {domain.subDomains.map((sub) => (
-          <div key={sub.id} className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+          <div
+            key={sub.id}
+            onClick={() => onSelectSubDomain(sub)}
+            className="flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/15 hover:border-white/20 transition-all cursor-pointer group"
+          >
             <span>{sub.icon}</span>
-            <span className="text-sm text-white/90 font-medium">{sub.name}</span>
-            <ChevronRight size={12} className="ml-auto text-white/40" />
+            <span className="text-sm text-white/90 font-medium group-hover:text-white">{sub.name}</span>
+            <ChevronRight size={14} className="ml-auto text-white/40 group-hover:text-white transition-colors" />
           </div>
         ))}
       </div>
@@ -80,9 +92,15 @@ function CareerCardsPanel({
   onBack: () => void;
 }) {
   const navigate = useNavigate();
-  const { addToCompare, comparedCareers } = useCareer();
+  const { addToCompare, selectCareer } = useCareer();
   const { addToast } = useUI();
   const subCareers = careers.filter((c) => subDomain.careerIds.includes(c.id));
+
+  const handleSelect = async (career: any) => {
+    await selectCareer(career);
+    addToast({ type: 'success', message: `${career.title} chosen as active path! 🎯` });
+    navigate('/skill-gap');
+  };
 
   return (
     <motion.div
@@ -90,83 +108,83 @@ function CareerCardsPanel({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 32 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute right-6 top-1/2 -translate-y-1/2 w-80 space-y-4"
+      className="absolute right-6 top-1/2 -translate-y-1/2 w-92 max-h-[85vh] overflow-y-auto space-y-4 z-30 p-1 custom-scrollbar"
     >
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
+        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm mb-2"
       >
         <ArrowLeft size={14} />
         Back to {domain.name}
       </button>
 
-      <div className="bg-black/40 backdrop-blur-2xl rounded-3xl p-4 border border-white/10 text-white">
-        <p className="text-xs font-semibold text-white/50 mb-1 uppercase tracking-wider">{domain.name}</p>
-        <h2 className="font-display text-lg font-bold text-white flex items-center gap-2">
-          <span>{subDomain.icon}</span> {subDomain.name}
-        </h2>
-        <p className="text-sm text-white/70 mt-1">{subDomain.description}</p>
+      <div className="bg-black/65 backdrop-blur-2xl rounded-3xl p-5 border border-white/10 text-white">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-2xl">{subDomain.icon}</span>
+          <div>
+            <h3 className="font-display font-bold text-white text-lg">{subDomain.name}</h3>
+            <p className="text-xs text-white/60">{subCareers.length} career paths available</p>
+          </div>
+        </div>
+        <p className="text-xs text-white/70 mt-2">{subDomain.description}</p>
       </div>
 
-      <div className="space-y-3 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="space-y-3">
         {subCareers.map((career) => (
           <motion.div
             key={career.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-black/40 backdrop-blur-2xl rounded-3xl p-5 border border-white/10 hover:border-white/30 transition-all duration-200 cursor-pointer group text-white"
-            onClick={() => navigate(`/career/${career.id}`)}
+            className="bg-black/70 backdrop-blur-2xl rounded-2xl p-4 border border-white/10 text-white space-y-3 hover:border-white/20 transition-colors shadow-lg"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="font-display font-bold text-white group-hover:text-primary transition-colors">
-                  {career.title}
-                </p>
-                <p className="text-xs text-white/60 mt-0.5">{career.salary.mid}/yr · mid-level</p>
-              </div>
-              {career.matchScore && (
-                <div className="flex items-center gap-1.5 bg-primary/20 border border-primary/30 rounded-full px-2.5 py-1">
-                  <Star size={11} className="text-primary fill-primary" />
-                  <span className="text-xs font-bold text-primary">{career.matchScore}%</span>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">{career.emoji}</span>
+                <div>
+                  <h4 className="font-display font-semibold text-white text-sm">{career.title}</h4>
+                  <p className="text-xs text-white/50">{career.salary.mid}/yr avg · {career.growthRate}</p>
                 </div>
-              )}
+              </div>
+              <DemandBadge demand={career.demandLevel || (career as any).demand} />
             </div>
 
-            <p className="text-xs text-white/70 leading-relaxed mb-3 line-clamp-2">
-              {career.tagline}
-            </p>
+            <p className="text-xs text-white/70 line-clamp-2">{career.description}</p>
 
-            <div className="flex items-center gap-2">
-              <DemandBadge level={career.demandLevel} />
-              <span className="flex items-center gap-1 text-xs text-emerald-400">
-                <TrendingUp size={10} />
-                {career.growthRate}
-              </span>
-            </div>
-
-            <div className="flex gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 pt-1 flex-wrap">
               <Button
-                variant="primary"
                 size="xs"
-                className="bg-white text-black hover:bg-white/90 border-0"
-                onClick={() => navigate(`/career/${career.id}`)}
+                variant="primary"
+                onClick={() => handleSelect(career)}
+                className="flex-1 bg-white text-black hover:bg-white/90 font-medium text-xs"
               >
-                Explore
+                Choose Path
               </Button>
               <Button
-                variant="outline"
                 size="xs"
-                className="text-white border-white/20 hover:bg-white/10"
+                variant="outline"
+                onClick={() => navigate(`/roadmap?careerId=${career.id}`)}
+                className="text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10 text-xs"
+              >
+                Roadmap
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
                 onClick={() => {
-                  if (comparedCareers.length < 3) {
-                    addToCompare(career);
-                    addToast({ type: 'success', message: `${career.title} added to compare` });
-                  } else {
-                    addToast({ type: 'warning', message: 'You can compare up to 3 careers' });
-                  }
+                  addToCompare(career);
+                  addToast({ type: 'info', message: `Added ${career.title} to comparison` });
                 }}
+                className="text-white border-white/20 hover:bg-white/10 text-xs"
               >
                 Compare
+              </Button>
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => navigate(`/career/${career.id}`)}
+                className="text-white/70 hover:text-white text-xs"
+              >
+                Details
               </Button>
             </div>
           </motion.div>
@@ -180,14 +198,28 @@ function CareerCardsPanel({
 // SKY HEADER HUD
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function SkyHUD({ view }: { view: CameraView }) {
+  const navigate = useNavigate();
+
   return (
-    <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
-      <div className="bg-black/40 backdrop-blur-2xl rounded-2xl px-5 py-2.5 border border-white/10 flex items-center gap-4 text-white shadow-lg">
-        <span className="text-sm font-medium text-white">
+    <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 z-30">
+      <div className="bg-black/60 backdrop-blur-2xl rounded-2xl px-5 py-2.5 border border-white/10 flex items-center gap-4 text-white shadow-xl">
+        <span className="text-sm font-medium text-white flex items-center gap-1.5">
+          <Compass size={16} className="text-cyan-400" />
           {view === 'SKY_VIEW' ? '🌌 Career Sky' : view === 'DOMAIN_VIEW' ? '🔍 Exploring Domain' : '💫 Career View'}
         </span>
         <div className="w-px h-4 bg-white/20" />
-        <span className="text-xs text-white/60 tracking-wider uppercase">{domains.length} domains · click a cloud to explore</span>
+        <span className="text-xs text-white/60 tracking-wider uppercase hidden sm:inline">
+          {domains.length} domains · Drag to rotate · Click cloud to explore
+        </span>
+        <Button
+          size="xs"
+          variant="primary"
+          onClick={() => navigate('/select-career')}
+          className="ml-2 bg-gradient-to-r from-indigo-500 to-violet-500 text-white hover:from-indigo-600 hover:to-violet-600 border-0 flex items-center gap-1.5"
+        >
+          <Sparkles size={12} />
+          Choose Path
+        </Button>
       </div>
     </div>
   );
@@ -207,125 +239,130 @@ function CompareBar() {
       initial={{ y: 80 }}
       animate={{ y: 0 }}
       exit={{ y: 80 }}
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20"
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-2xl rounded-2xl px-5 py-3 border border-white/10 flex items-center gap-4 text-white z-30 shadow-2xl"
     >
-      <div className="bg-black/40 backdrop-blur-2xl rounded-2xl px-5 py-3 border border-white/10 flex items-center gap-4 text-white shadow-lg">
-        <span className="text-sm text-white/60">Comparing:</span>
+      <div className="flex items-center gap-2">
         {comparedCareers.map((c) => (
-          <span key={c.id} className="text-sm font-medium text-white">{c.title}</span>
+          <span key={c.id} className="text-lg" title={c.title}>
+            {c.emoji}
+          </span>
         ))}
-        <Button size="xs" variant="primary" className="bg-white text-black hover:bg-white/90 border-0" onClick={() => navigate('/compare')}>
+      </div>
+      <span className="text-sm text-white/70 font-medium">
+        {comparedCareers.length} career{comparedCareers.length > 1 ? 's' : ''} in comparison
+      </span>
+      <div className="flex items-center gap-2">
+        <Button
+          size="xs"
+          variant="primary"
+          onClick={() => navigate('/compare')}
+          className="bg-white text-black hover:bg-white/90"
+        >
           Compare Now
         </Button>
-        <Button size="xs" variant="outline" className="text-white border-white/20 hover:bg-white/10" onClick={clearCompare}>
+        <button
+          onClick={clearCompare}
+          className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1"
+        >
           Clear
-        </Button>
+        </button>
       </div>
     </motion.div>
   );
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CAREER SKY PAGE
+// MAIN CAREER SKY PAGE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export default function CareerSkyPage() {
   const [cameraView, setCameraView] = useState<CameraView>('SKY_VIEW');
-  const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
-  const [activeSubDomainId, setActiveSubDomainId] = useState<string | null>(null);
-  const { selectCareer } = useCareer();
-  const navigate = useNavigate();
-
-  const activeDomain = domains.find((d) => d.id === activeDomainId) || null;
-  const activeSubDomain = activeDomain?.subDomains.find((s) => s.id === activeSubDomainId) || null;
+  const [activeDomain, setActiveDomain] = useState<Domain | null>(null);
+  const [activeSubDomain, setActiveSubDomain] = useState<SubDomain | null>(null);
 
   const handleDomainClick = (domain: Domain) => {
-    setActiveDomainId(domain.id);
-    setActiveSubDomainId(null);
+    setActiveDomain(domain);
+    setActiveSubDomain(null);
     setCameraView('DOMAIN_VIEW');
   };
 
-  const handleSubDomainClick = (subDomain: SubDomain, _domain: Domain) => {
-    setActiveSubDomainId(subDomain.id);
-    
-    // Select the first career in this sub-domain for the roadmap
-    if (subDomain.careerIds.length > 0) {
-      const careerToSelect = careers.find(c => c.id === subDomain.careerIds[0]);
-      if (careerToSelect) {
-        selectCareer(careerToSelect);
-      }
-    }
-    
-    navigate('/roadmap');
+  const handleSubDomainClick = (subDomain: SubDomain, domain: Domain) => {
+    setActiveDomain(domain);
+    setActiveSubDomain(subDomain);
   };
 
-  const handleExitToSky = () => {
-    setActiveDomainId(null);
-    setActiveSubDomainId(null);
+  const handleBackToSky = () => {
+    setActiveDomain(null);
+    setActiveSubDomain(null);
     setCameraView('SKY_VIEW');
   };
 
-  const handleExitToDomain = () => {
-    setActiveSubDomainId(null);
-    setCameraView('DOMAIN_VIEW');
+  const handleBackToDomain = () => {
+    setActiveSubDomain(null);
   };
 
-  // Dynamic sky background
-  const skyBg = activeDomain
-    ? activeDomain.theme.atmosphere
-    : 'radial-gradient(ellipse at top, #0a1020 0%, #020817 70%)';
-
   return (
-    <div className="w-full h-screen overflow-hidden relative" style={{ background: skyBg }}>
+    <div className="relative w-full h-[calc(100vh-4rem)] bg-[#020817] overflow-hidden select-none">
       {/* 3D Canvas */}
       <Canvas
-        shadows={false}
-        gl={{ antialias: true, alpha: false }}
-        style={{ position: 'absolute', inset: 0 }}
+        camera={{ position: [0, 3, 22], fov: 50, near: 0.1, far: 1000 }}
+        dpr={[1, 1.5]}
+        gl={{
+          antialias: true,
+          alpha: false,
+          powerPreference: 'default',
+          preserveDrawingBuffer: false,
+          failIfMajorPerformanceCaveat: false,
+        }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            console.warn('WebGL context lost, restoring...');
+          });
+          gl.domElement.addEventListener('webglcontextrestored', () => {
+            console.log('WebGL context restored successfully.');
+          });
+        }}
       >
         <Suspense fallback={null}>
           <SkyScene
             domains={domains}
             cameraView={cameraView}
-            activeDomainId={activeDomainId}
+            activeDomainId={activeDomain?.id || null}
             onDomainClick={handleDomainClick}
             onSubDomainClick={handleSubDomainClick}
           />
         </Suspense>
       </Canvas>
 
-      {/* HUD overlay */}
+      {/* Top HUD */}
       <SkyHUD view={cameraView} />
 
-      {/* Domain Info Panel */}
+      {/* Domain Info Panel (Left) */}
       <AnimatePresence>
         {cameraView === 'DOMAIN_VIEW' && activeDomain && !activeSubDomain && (
-          <DomainInfoPanel key="domain-panel" domain={activeDomain} onBack={handleExitToSky} />
-        )}
-      </AnimatePresence>
-
-      {/* Career Cards Panel */}
-      <AnimatePresence>
-        {cameraView === 'CAREER_VIEW' && activeSubDomain && activeDomain && (
-          <CareerCardsPanel
-            key="career-panel"
-            subDomain={activeSubDomain}
+          <DomainInfoPanel
             domain={activeDomain}
-            onBack={handleExitToDomain}
+            onBack={handleBackToSky}
+            onSelectSubDomain={(sub) => setActiveSubDomain(sub)}
           />
         )}
       </AnimatePresence>
 
-      {/* Compare bar */}
+      {/* Career Cards Panel (Right) */}
+      <AnimatePresence>
+        {activeSubDomain && activeDomain && (
+          <CareerCardsPanel
+            subDomain={activeSubDomain}
+            domain={activeDomain}
+            onBack={handleBackToDomain}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Compare Bar */}
       <AnimatePresence>
         <CompareBar />
       </AnimatePresence>
-
-      {/* Touch overlay hint for mobile */}
-      {cameraView === 'SKY_VIEW' && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground/60 pointer-events-none">
-          Tap a cloud to explore
-        </div>
-      )}
     </div>
   );
 }

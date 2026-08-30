@@ -8,6 +8,8 @@ import { TaskTimer } from '../components/assessment/TestTimer';
 import { GitHubSubmission } from '../components/tasks/GitHubSubmission';
 import type { TaskSubmission } from '../context/CareerContext';
 
+import { taskApi } from '../services/task.api';
+
 export default function TaskPage() {
   const { nodeId } = useParams<{ nodeId: string }>();
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ export default function TaskPage() {
   const hasStarted = existing.taskStartTime !== undefined;
   const deadline = existing.taskDeadline;
 
-  const handleStartTask = () => {
+  const handleStartTask = async () => {
     const startTime = Date.now();
     const deadlineTime = startTime + task.durationHours * 60 * 60 * 1000;
     updateTaskSubmission({
@@ -48,10 +50,15 @@ export default function TaskPage() {
       taskStartTime: startTime,
       taskDeadline: deadlineTime,
     });
+
+    try {
+      await taskApi.startTask(nodeId);
+    } catch (err) {
+      console.warn('Backend task start sync failed:', err);
+    }
   };
 
-  const handleSubmit = ({ githubUrl, liveUrl }: { githubUrl: string; liveUrl?: string }) => {
-    // TODO: Connect to backend API for actual submission
+  const handleSubmit = async ({ githubUrl, liveUrl }: { githubUrl: string; liveUrl?: string }) => {
     updateTaskSubmission({
       ...existing,
       nodeId,
@@ -60,6 +67,12 @@ export default function TaskPage() {
       liveUrl,
       submittedAt: new Date().toISOString(),
     });
+
+    try {
+      await taskApi.submitTask(nodeId, { githubUrl, liveUrl });
+    } catch (err) {
+      console.warn('Backend task submission sync failed:', err);
+    }
   };
 
   const difficultyColor: Record<string, string> = {

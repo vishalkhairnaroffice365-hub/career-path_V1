@@ -7,6 +7,8 @@ import { useCareer } from '../context/CareerContext';
 import type { CourseProgress } from '../context/CareerContext';
 import { Progress } from '../components/ui/Progress';
 
+import { courseApi } from '../services/course.api';
+
 export default function CoursePage() {
   const { nodeId } = useParams<{ nodeId: string }>();
   const navigate = useNavigate();
@@ -38,23 +40,32 @@ export default function CoursePage() {
   const totalLessons = allLessons.length;
   const progressPercent = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-  const toggleLesson = (lessonId: string) => {
+  const toggleLesson = async (lessonId: string) => {
     if (courseCompleted) return;
-    setCompletedLessons((prev) => {
-      const next = prev.includes(lessonId) ? prev.filter((l) => l !== lessonId) : [...prev, lessonId];
-      const progress: CourseProgress = {
-        nodeId,
-        lessonsCompleted: next,
-        totalLessons,
-        completed: false,
-        startedAt: existing?.startedAt ?? new Date().toISOString(),
-      };
-      updateCourseProgress(progress);
-      return next;
-    });
+    const isCompleted = completedLessons.includes(lessonId);
+    const nextCompleted = isCompleted
+      ? completedLessons.filter((l) => l !== lessonId)
+      : [...completedLessons, lessonId];
+
+    setCompletedLessons(nextCompleted);
+
+    const progress: CourseProgress = {
+      nodeId,
+      lessonsCompleted: nextCompleted,
+      totalLessons,
+      completed: false,
+      startedAt: existing?.startedAt ?? new Date().toISOString(),
+    };
+    updateCourseProgress(progress);
+
+    try {
+      await courseApi.toggleLesson(nodeId, lessonId, !isCompleted);
+    } catch (err) {
+      console.warn('Backend lesson progress sync failed:', err);
+    }
   };
 
-  const handleCompleteCourse = () => {
+  const handleCompleteCourse = async () => {
     if (courseCompleted) return;
     const allLessonIds = allLessons.map((l) => l.id);
     setCourseCompleted(true);
@@ -68,7 +79,13 @@ export default function CoursePage() {
       completedAt: new Date().toISOString(),
     };
     updateCourseProgress(progress);
-    completeNode(nodeId);
+    await completeNode(nodeId);
+
+    try {
+      await courseApi.completeCourse(nodeId);
+    } catch (err) {
+      console.warn('Backend course completion sync failed:', err);
+    }
   };
 
   const difficultyColor: Record<string, string> = {

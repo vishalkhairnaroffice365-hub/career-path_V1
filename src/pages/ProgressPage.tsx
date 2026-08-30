@@ -61,9 +61,9 @@ export default function ProgressPage() {
       else if (c.startedAt) activities.push({ text: 'Course in progress', icon: '→', time: new Date(c.startedAt).getTime() });
     });
     
-    Object.values(learning.assessmentScores).forEach(a => {
-      if (a.passed) activities.push({ text: 'Assessment passed', icon: '✓', time: new Date(a.lastAttemptAt).getTime() });
-      else activities.push({ text: 'Assessment attempted', icon: '→', time: new Date(a.lastAttemptAt).getTime() });
+    Object.values(learning.assessmentScores).forEach((a) => {
+      if (a.passed) activities.push({ text: 'Assessment passed', icon: '✓', time: a.lastAttemptAt ? new Date(a.lastAttemptAt).getTime() : Date.now() });
+      else if (a.lastAttemptAt) activities.push({ text: 'Assessment attempted', icon: '→', time: new Date(a.lastAttemptAt).getTime() });
     });
     
     // codingScores doesn't have timestamp, we'll give it a generic high timestamp so it shows up recently if it exists

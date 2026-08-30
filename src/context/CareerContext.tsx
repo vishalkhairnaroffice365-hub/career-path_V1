@@ -1,21 +1,60 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
-import type { UserProfile, UserProgress } from '../data/user';
+import type { UserProfile, UserProgress, UserStats, Achievement, OnboardingData } from '../data/user';
 import { defaultUser } from '../data/user';
 import type { Career } from '../data/careers';
 import { authApi } from '../services/auth.api';
 import { careerApi } from '../services/career.api';
-import { roadmapApi } from '../services/roadmap.api';
 import { userApi } from '../services/user.api';
 
-interface CareerState {
+export type { UserProfile, UserProgress, UserStats, Achievement, OnboardingData };
+
+export interface CourseProgress {
+  nodeId: string;
+  lessonsCompleted: string[];
+  totalLessons: number;
+  completed: boolean;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+export interface AssessmentScore {
+  nodeId: string;
+  score: number;
+  passed: boolean;
+  attempts: number;
+  lastAttemptAt: string;
+}
+
+export interface TaskSubmission {
+  nodeId: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  notes?: string;
+  fileName?: string;
+  status: 'not-started' | 'in-progress' | 'submitted' | 'under-review' | 'passed' | 'failed';
+  submittedAt?: string;
+  taskStartTime?: number;
+  taskDeadline?: number;
+}
+
+export interface UserLearning {
+  roadmapStarted: boolean;
+  courseProgress: Record<string, CourseProgress>;
+  assessmentScores: Record<string, AssessmentScore>;
+  codingScores: Record<string, number>;
+  taskSubmissions: Record<string, TaskSubmission>;
+}
+
+export interface CareerState {
   user: UserProfile;
   selectedCareer: Career | null;
   comparedCareers: Career[];
+  learning: UserLearning;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
-type CareerAction =
+export type CareerAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: UserProfile }
   | { type: 'LOGIN'; payload: Partial<UserProfile> }
@@ -26,15 +65,29 @@ type CareerAction =
   | { type: 'ADD_COMPARE'; payload: Career }
   | { type: 'REMOVE_COMPARE'; payload: string }
   | { type: 'CLEAR_COMPARE' }
+  | { type: 'START_ROADMAP' }
   | { type: 'UPDATE_PROGRESS'; payload: Partial<UserProgress> }
   | { type: 'COMPLETE_NODE'; payload: string }
   | { type: 'EARN_ACHIEVEMENT'; payload: string }
-  | { type: 'COMPLETE_ONBOARDING'; payload: Partial<UserProfile> };
+  | { type: 'COMPLETE_ONBOARDING'; payload: Partial<UserProfile> }
+  | { type: 'SET_COURSE_PROGRESS'; payload: CourseProgress }
+  | { type: 'SET_ASSESSMENT_SCORE'; payload: AssessmentScore }
+  | { type: 'SET_CODING_SCORE'; payload: { nodeId: string; score: number } }
+  | { type: 'SET_TASK_SUBMISSION'; payload: TaskSubmission };
+
+const initialLearning: UserLearning = {
+  roadmapStarted: true,
+  courseProgress: {},
+  assessmentScores: {},
+  codingScores: {},
+  taskSubmissions: {},
+};
 
 const initialState: CareerState = {
   user: defaultUser,
   selectedCareer: null,
   comparedCareers: [],
+  learning: initialLearning,
   isAuthenticated: false,
   isLoading: true,
 };
@@ -99,6 +152,14 @@ function careerReducer(state: CareerState, action: CareerAction): CareerState {
         ...state,
         comparedCareers: [],
       };
+    case 'START_ROADMAP':
+      return {
+        ...state,
+        learning: {
+          ...state.learning,
+          roadmapStarted: true,
+        },
+      };
     case 'UPDATE_PROGRESS':
       return {
         ...state,
@@ -140,16 +201,61 @@ function careerReducer(state: CareerState, action: CareerAction): CareerState {
           onboardingCompleted: true,
         },
       };
+    case 'SET_COURSE_PROGRESS':
+      return {
+        ...state,
+        learning: {
+          ...state.learning,
+          courseProgress: {
+            ...state.learning.courseProgress,
+            [action.payload.nodeId]: action.payload,
+          },
+        },
+      };
+    case 'SET_ASSESSMENT_SCORE':
+      return {
+        ...state,
+        learning: {
+          ...state.learning,
+          assessmentScores: {
+            ...state.learning.assessmentScores,
+            [action.payload.nodeId]: action.payload,
+          },
+        },
+      };
+    case 'SET_CODING_SCORE':
+      return {
+        ...state,
+        learning: {
+          ...state.learning,
+          codingScores: {
+            ...state.learning.codingScores,
+            [action.payload.nodeId]: action.payload.score,
+          },
+        },
+      };
+    case 'SET_TASK_SUBMISSION':
+      return {
+        ...state,
+        learning: {
+          ...state.learning,
+          taskSubmissions: {
+            ...state.learning.taskSubmissions,
+            [action.payload.nodeId]: action.payload,
+          },
+        },
+      };
     default:
       return state;
   }
 }
 
-interface CareerContextValue {
+export interface CareerContextValue {
   state: CareerState;
   user: UserProfile;
   selectedCareer: Career | null;
   comparedCareers: Career[];
+  learning: UserLearning;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (userData?: Partial<UserProfile>) => void;
@@ -160,8 +266,15 @@ interface CareerContextValue {
   removeFromCompare: (careerId: string) => void;
   clearCompare: () => void;
   completeNode: (nodeId: string) => void;
+  startRoadmap: () => void;
   earnAchievement: (achievementId: string) => void;
   completeOnboarding: (profileData: Partial<UserProfile>) => void;
+  updateProfile: (data: { name?: string; avatar?: string }) => Promise<void>;
+  updateCourseProgress: (progress: CourseProgress) => void;
+  completeCourse: (nodeId: string) => Promise<void>;
+  saveAssessmentScore: (score: AssessmentScore) => void;
+  saveCodingScore: (nodeId: string, score: number) => void;
+  updateTaskSubmission: (submission: TaskSubmission) => void;
   refreshProfile: () => Promise<void>;
 }
 
@@ -247,19 +360,59 @@ export function CareerProvider({ children }: { children: ReactNode }) {
 
   const handleCompleteNode = (nodeId: string) => {
     dispatch({ type: 'COMPLETE_NODE', payload: nodeId });
-    roadmapApi
-      .completeNode(nodeId)
-      .then((res) => {
-        if (res.user) {
-          dispatch({ type: 'SET_USER', payload: res.user });
-        }
-      })
-      .catch(() => {});
+  };
+
+  const handleStartRoadmap = () => {
+    dispatch({ type: 'START_ROADMAP' });
   };
 
   const handleCompleteOnboarding = (profileData: Partial<UserProfile>) => {
     dispatch({ type: 'COMPLETE_ONBOARDING', payload: profileData });
     userApi.completeOnboarding().catch(() => {});
+  };
+
+  const handleUpdateProfile = async (data: { name?: string; avatar?: string }) => {
+    try {
+      const updated = await userApi.updateProfile(data);
+      if (updated) {
+        dispatch({ type: 'SET_USER', payload: updated });
+      }
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  const handleUpdateCourseProgress = (progress: CourseProgress) => {
+    dispatch({ type: 'SET_COURSE_PROGRESS', payload: progress });
+  };
+
+  const handleCompleteCourse = async (nodeId: string) => {
+    const existing = state.learning.courseProgress[nodeId] || {
+      nodeId,
+      lessonsCompleted: [],
+      totalLessons: 1,
+      completed: true,
+    };
+    const progress: CourseProgress = {
+      ...existing,
+      completed: true,
+      completedAt: new Date().toISOString(),
+    };
+
+    dispatch({ type: 'SET_COURSE_PROGRESS', payload: progress });
+    dispatch({ type: 'COMPLETE_NODE', payload: nodeId });
+  };
+
+  const handleSaveAssessmentScore = (score: AssessmentScore) => {
+    dispatch({ type: 'SET_ASSESSMENT_SCORE', payload: score });
+  };
+
+  const handleSaveCodingScore = (nodeId: string, score: number) => {
+    dispatch({ type: 'SET_CODING_SCORE', payload: { nodeId, score } });
+  };
+
+  const handleUpdateTaskSubmission = (submission: TaskSubmission) => {
+    dispatch({ type: 'SET_TASK_SUBMISSION', payload: submission });
   };
 
   const handleLogout = () => {
@@ -272,6 +425,7 @@ export function CareerProvider({ children }: { children: ReactNode }) {
     user: state.user,
     selectedCareer: state.selectedCareer,
     comparedCareers: state.comparedCareers,
+    learning: state.learning,
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
     login: (userData) => dispatch({ type: 'LOGIN', payload: userData ?? {} }),
@@ -282,8 +436,15 @@ export function CareerProvider({ children }: { children: ReactNode }) {
     removeFromCompare: handleRemoveFromCompare,
     clearCompare: handleClearCompare,
     completeNode: handleCompleteNode,
+    startRoadmap: handleStartRoadmap,
     earnAchievement: (id) => dispatch({ type: 'EARN_ACHIEVEMENT', payload: id }),
     completeOnboarding: handleCompleteOnboarding,
+    updateProfile: handleUpdateProfile,
+    updateCourseProgress: handleUpdateCourseProgress,
+    completeCourse: handleCompleteCourse,
+    saveAssessmentScore: handleSaveAssessmentScore,
+    saveCodingScore: handleSaveCodingScore,
+    updateTaskSubmission: handleUpdateTaskSubmission,
     refreshProfile,
   };
 

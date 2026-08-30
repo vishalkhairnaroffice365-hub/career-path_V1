@@ -71,7 +71,7 @@ export default function ProjectsPage() {
 
   const handleStartProject = async (project: Project) => {
     try {
-      await projectApi.updateStatus(project.id, { status: 'in-progress' });
+      await projectApi.updateStatus(project.id, 'in-progress');
       setProjectList((prev) =>
         prev.map((p) => (p.id === project.id ? { ...p, status: 'in-progress' } : p))
       );

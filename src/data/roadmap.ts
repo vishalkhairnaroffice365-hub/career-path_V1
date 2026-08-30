@@ -1,17 +1,19 @@
-export type RoadmapNodeStatus = 'locked' | 'available' | 'in-progress' | 'completed';
+import { rawRoadmaps } from '../../server/src/services/seedData/roadmaps.data';
+
+export type RoadmapNodeStatus = 'completed' | 'in-progress' | 'available' | 'locked';
 
 export interface RoadmapNode {
   id: string;
   title: string;
   description: string;
-  type: 'milestone' | 'skill' | 'project' | 'certification' | 'checkpoint';
+  type: 'milestone' | 'skill' | 'project' | 'checkpoint' | 'certification';
   duration: string;
   skillIds: string[];
   resourceIds: string[];
   projectIds: string[];
-  prerequisites: string[]; // node ids
+  prerequisites: string[];
   status: RoadmapNodeStatus;
-  position: { x: number; y: number }; // for visual layout
+  position: { x: number; y: number };
   phase: number; // 1 = foundation, 2 = core, 3 = advanced, 4 = launch
 }
 
@@ -35,12 +37,11 @@ export interface Roadmap {
 
 export type CareerRoadmap = Roadmap;
 
-import { rawRoadmaps } from '../../server/src/services/seedData/roadmaps.data';
-
 export const roadmaps: Roadmap[] = rawRoadmaps.map((r) => ({
   ...r,
   nodes: r.nodes.map((n) => ({
     ...n,
+    type: (n.type || 'skill') as any,
     status: n.defaultStatus as RoadmapNodeStatus,
   })),
 }));

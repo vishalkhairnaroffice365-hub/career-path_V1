@@ -57,7 +57,7 @@ export function GitHubSubmission({
     'failed': { label: 'Revisions Requested', color: 'text-danger', bg: 'bg-danger/10', emoji: '✗' },
   };
 
-  const status = statusConfig[submission.status] || statusConfig['not-started'];
+  const status = (statusConfig as Record<string, { label: string; color: string; bg: string; emoji: string }>)[submission.status] || statusConfig['not-started'];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

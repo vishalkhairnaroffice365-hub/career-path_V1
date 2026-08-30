@@ -29,6 +29,12 @@ const AchievementsPage = lazy(() => import('./pages/AchievementsPage'));
 const CareerReadinessPage = lazy(() => import('./pages/CareerReadinessPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
+// New learning pages
+const CoursePage = lazy(() => import('./pages/CoursePage'));
+const AssessmentPage = lazy(() => import('./pages/AssessmentPage'));
+const CodingChallengePage = lazy(() => import('./pages/CodingChallengePage'));
+const TaskPage = lazy(() => import('./pages/TaskPage'));
+
 function PageLoader() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -80,6 +86,12 @@ function AppRoutes() {
           <Route path="/achievements" element={<ProtectedRoute><AchievementsPage /></ProtectedRoute>} />
           <Route path="/readiness" element={<ProtectedRoute><CareerReadinessPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+
+          {/* ── New Learning Routes ──────────────────────────── */}
+          <Route path="/roadmap/course/:nodeId" element={<ProtectedRoute><CoursePage /></ProtectedRoute>} />
+          <Route path="/roadmap/assessment/:nodeId" element={<ProtectedRoute><AssessmentPage /></ProtectedRoute>} />
+          <Route path="/roadmap/challenge/:nodeId" element={<ProtectedRoute><CodingChallengePage /></ProtectedRoute>} />
+          <Route path="/roadmap/task/:nodeId" element={<ProtectedRoute><TaskPage /></ProtectedRoute>} />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />

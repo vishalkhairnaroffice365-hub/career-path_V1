@@ -232,6 +232,8 @@ export default function CareerSkyPage() {
   const [cameraView, setCameraView] = useState<CameraView>('SKY_VIEW');
   const [activeDomainId, setActiveDomainId] = useState<string | null>(null);
   const [activeSubDomainId, setActiveSubDomainId] = useState<string | null>(null);
+  const { selectCareer } = useCareer();
+  const navigate = useNavigate();
 
   const activeDomain = domains.find((d) => d.id === activeDomainId) || null;
   const activeSubDomain = activeDomain?.subDomains.find((s) => s.id === activeSubDomainId) || null;
@@ -244,7 +246,16 @@ export default function CareerSkyPage() {
 
   const handleSubDomainClick = (subDomain: SubDomain, _domain: Domain) => {
     setActiveSubDomainId(subDomain.id);
-    setCameraView('CAREER_VIEW');
+    
+    // Select the first career in this sub-domain for the roadmap
+    if (subDomain.careerIds.length > 0) {
+      const careerToSelect = careers.find(c => c.id === subDomain.careerIds[0]);
+      if (careerToSelect) {
+        selectCareer(careerToSelect);
+      }
+    }
+    
+    navigate('/roadmap');
   };
 
   const handleExitToSky = () => {

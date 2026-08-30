@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useCareer } from '../../context/CareerContext';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { WowButton } from '../wow/WowButton';
 
 function cn(...inputs: Parameters<typeof clsx>) {
   return twMerge(clsx(inputs));
@@ -79,19 +80,24 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Right side: User avatar */}
-        {isAuthenticated && (
-          <button
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl px-4 py-3 hover:border-border/80 transition-all duration-200 shadow-editorial"
-          >
-            <span className="text-xl">{user.avatar}</span>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-foreground leading-none">{user.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{user.progress.streak} day streak 🔥</p>
-            </div>
-          </button>
-        )}
+        {/* Right side: WOW button + User avatar */}
+        <div className="flex items-center gap-3">
+          {/* WOW button — visible when authenticated */}
+          {isAuthenticated && <WowButton />}
+
+          {isAuthenticated && (
+            <button
+              onClick={() => navigate('/profile')}
+              className="flex items-center gap-3 bg-surface/80 backdrop-blur-xl border border-border rounded-2xl px-4 py-3 hover:border-border/80 transition-all duration-200 shadow-editorial"
+            >
+              <span className="text-xl">{user.avatar}</span>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-foreground leading-none">{user.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{user.progress.streak} day streak 🔥</p>
+              </div>
+            </button>
+          )}
+        </div>
       </nav>
 
       {/* Mobile Navbar */}
@@ -101,13 +107,16 @@ export function Navbar() {
             <span className="text-lg">✦</span>
             <span className="font-display font-bold text-sm">CareerPath</span>
           </Link>
-          <button
-            onClick={() => setIsMobileOpen(!isMobileOpen)}
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-all duration-200"
-            aria-label="Toggle menu"
-          >
-            {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && <WowButton />}
+            <button
+              onClick={() => setIsMobileOpen(!isMobileOpen)}
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-all duration-200"
+              aria-label="Toggle menu"
+            >
+              {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}

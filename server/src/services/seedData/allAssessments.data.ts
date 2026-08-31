@@ -1,5 +1,7 @@
 import { rawRoadmaps } from './roadmaps.data.js';
-import type { IMCQQuestion } from '../../models/Assessment.model.js';
+interface MCQOption { id: string; text: string; }
+
+interface IMCQQuestion { id: string; question: string; options: MCQOption[]; correctAnswer: string; explanation: string; difficulty: 'easy' | 'medium' | 'hard'; }
 
 /**
  * Curated topic question generator that produces 10+ distinct, technically accurate questions

@@ -1,5 +1,7 @@
 import { rawRoadmaps } from './roadmaps.data.js';
-import type { ChallengeLanguage, ITestCase } from '../../models/CodingChallenge.model.js';
+type ChallengeLanguage = 'typescript' | 'python' | 'java' | 'kotlin';
+
+interface ITestCase { id: string; description: string; input: string; expectedOutput: string; }
 
 export interface RawChallengeData {
   id: string;
